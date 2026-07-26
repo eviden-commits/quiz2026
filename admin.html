@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>관리자 설정 - 현장 퀴즈 챔피언</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="wrap">
+  <div class="card wide">
+    <h1 class="title" style="font-size:30px;">⚙ 관리자 설정</h1>
+    <p class="subtitle">퀴즈 회차별 사전설정 · 문제 출제 · 진행 제어</p>
+
+    <div class="section-title">1. 문제 출제 (data 시트 → quiz 시트)</div>
+    <div id="genAlert" class="alert hidden"></div>
+    <label class="field-label">퀴즈 번호</label>
+    <input type="text" id="genQuizNo" placeholder="예: 1" />
+    <div class="grid2">
+      <div>
+        <label class="field-label">문항 수</label>
+        <input type="text" id="genCount" placeholder="예: 10" value="10" />
+      </div>
+      <div>
+        <label class="field-label">카테고리 (선택)</label>
+        <select id="genCategory"><option value="">전체</option></select>
+      </div>
+    </div>
+    <button class="btn secondary" id="genBtn">🎲 회차 문제 자동 출제</button>
+
+    <div class="section-title">2. 사전설정 (상품 · 수상자 수 · 시간제한)</div>
+    <div id="settingsAlert" class="alert hidden"></div>
+    <label class="field-label">퀴즈 번호</label>
+    <input type="text" id="setQuizNo" placeholder="예: 1" />
+    <button class="btn ghost small" id="loadSettingsBtn" style="width:auto;">불러오기</button>
+    <label class="field-label" style="margin-top:14px;">퀴즈 제목</label>
+    <input type="text" id="setTitle" placeholder="예: 7월 안전퀴즈" />
+    <div class="grid2">
+      <div>
+        <label class="field-label">상품 수</label>
+        <input type="text" id="setPrizeCount" value="0" />
+      </div>
+      <div>
+        <label class="field-label">수상자 수</label>
+        <input type="text" id="setWinnerCount" value="0" />
+      </div>
+    </div>
+    <label class="field-label">상품명 (쉼표로 구분)</label>
+    <input type="text" id="setPrizeNames" placeholder="예: 1등 무선이어폰, 2등 텀블러" />
+    <label class="field-label">참여형 - 전체 제한시간(초, 0=무제한)</label>
+    <input type="text" id="setTimeLimit" value="0" />
+    <button class="btn" id="saveSettingsBtn">설정 저장</button>
+
+    <div class="section-title">3. 진행 제어</div>
+    <div id="sessionAlert" class="alert hidden"></div>
+    <label class="field-label">퀴즈 번호</label>
+    <input type="text" id="sessQuizNo" placeholder="예: 1" />
+    <div class="grid2">
+      <button class="btn secondary" id="openPartBtn">📥 참여 접수 시작</button>
+      <button class="btn danger" id="closePartBtn">🔒 참여 마감</button>
+    </div>
+    <div class="grid2">
+      <button class="btn ghost" id="refreshStatusBtn">상태 새로고침</button>
+      <button class="btn danger" id="closeHostBtn">🔒 진행자 세션 마감</button>
+    </div>
+    <p class="muted" id="sessionStatus" style="text-align:center; margin-top:10px;"></p>
+
+    <div class="section-title">4. 참여 QR / 링크</div>
+    <label class="field-label">퀴즈 번호</label>
+    <input type="text" id="qrQuizNo" placeholder="예: 1" />
+    <button class="btn ghost" id="genQrBtn">QR 생성</button>
+    <div class="qr-box hidden" id="qrBox">
+      <img id="qrImg" alt="QR" />
+      <a class="link" id="qrLink" target="_blank"></a>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

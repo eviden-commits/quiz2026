@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>참여형 퀴즈 - 현장 퀴즈 챔피언</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 1. 참여 코드 입력 -->
+  <div class="card" id="screen-join">
+    <h1 class="title">📱 퀴즈 참여</h1>
+    <p class="subtitle">퀴즈 번호와 참여코드를 입력하세요</p>
+    <div id="join-alert" class="alert error hidden"></div>
+    <label class="field-label">퀴즈 번호</label>
+    <input type="text" id="quizNoInput" inputmode="numeric" placeholder="예: 1" />
+    <label class="field-label">참여코드 (원하는 번호를 직접 입력)</label>
+    <input type="text" id="codeInput" inputmode="numeric" placeholder="예: 1234" />
+    <button class="btn" id="joinBtn">참여하기</button>
+  </div>
+
+  <!-- 2. 문제 풀이 -->
+  <div class="card hidden" id="screen-quiz">
+    <div class="top-bar">
+      <span class="badge" id="qCounter">1 / 10</span>
+      <span class="timer" id="countdown">--:--</span>
+    </div>
+    <div class="progress-outer"><div class="progress-inner" id="progressBar" style="width:0%"></div></div>
+    <div class="qorder" id="qOrderLabel">문제 1</div>
+    <div class="question-text" id="questionText"></div>
+    <div class="choices" id="choicesBox"></div>
+  </div>
+
+  <!-- 3. 이름 입력 -->
+  <div class="card hidden" id="screen-name">
+    <h1 class="title">🙋 이름을 입력하세요</h1>
+    <p class="subtitle" id="nameSub">모든 문제를 풀었습니다. 이름을 입력하고 제출하세요.</p>
+    <div id="name-alert" class="alert error hidden"></div>
+    <input type="text" id="nameInput" placeholder="이름" />
+    <button class="btn" id="submitNameBtn">제출하기</button>
+  </div>
+
+  <!-- 4. 결과 -->
+  <div class="card hidden" id="screen-result">
+    <div class="celebrate">
+      <div class="big-emoji" id="resultEmoji">🎉</div>
+      <h1 class="title">수고하셨습니다!</h1>
+    </div>
+    <div class="section-title">내 결과</div>
+    <p style="text-align:center; font-size:20px; font-weight:800;" id="resultSummary"></p>
+    <div class="section-title">실시간 순위</div>
+    <table class="leaderboard" id="leaderboardTable"></table>
+    <button class="btn ghost" onclick="location.href='index.html'" style="margin-top:20px;">처음으로</button>
+  </div>
+
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/confetti.js"></script>
+<script src="js/play.js"></script>
+</body>
+</html>
