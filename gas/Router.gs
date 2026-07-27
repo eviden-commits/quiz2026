@@ -45,6 +45,7 @@ function route_(action, p) {
     case 'listSettings': return listSettings_();
     case 'listDataCategories': return listDataCategories_();
     case 'generateQuizSet': return generateQuizSet_(p);
+    case 'createParticipantRound': return createParticipantRound_(p);
     case 'listQuizNos': return listQuizNos_();
     case 'seedSampleData': return seedSampleData_();
 
@@ -53,6 +54,7 @@ function route_(action, p) {
     case 'getQuizForPlayer': return getQuizForPlayer_(p.quizNo);
 
     // ---- host mode ----
+    case 'startHostRandomQuiz': return startHostRandomQuiz_(p);
     case 'startHostSession': return startHostSession_(p.quizNo);
     case 'getHostSession': return getSession_(p.quizNo, 'host');
     case 'hostSetIndex': return hostSetIndex_(p.quizNo, p.index);

@@ -11,7 +11,6 @@
 
   var screens = {
     setup: document.getElementById('screen-setup'),
-    ready: document.getElementById('screen-ready'),
     play: document.getElementById('screen-play'),
     end: document.getElementById('screen-end')
   };
@@ -27,29 +26,19 @@
   }
 
   document.getElementById('loadBtn').addEventListener('click', function () {
-    var quizNo = document.getElementById('quizNoInput').value.trim();
-    if (!quizNo) { showSetupError('퀴즈 번호를 입력하세요.'); return; }
+    var count = document.getElementById('questionCountInput').value.trim();
+    if (!count || Number(count) <= 0) { showSetupError('문항 수를 입력하세요.'); return; }
     document.getElementById('setup-alert').classList.add('hidden');
-    QuizApi.call('getQuizForHost', { quizNo: quizNo })
+    QuizApi.call('startHostRandomQuiz', { count: count })
       .then(function (data) {
-        state.quizNo = quizNo;
+        state.quizNo = data.quizNo;
         state.questions = data.questions;
         state.settings = data.settings;
-        document.getElementById('readyTitle').textContent = (data.settings && data.settings.title) || ('퀴즈 ' + quizNo);
-        document.getElementById('readySub').textContent = '총 ' + data.questions.length + '문제 · 준비되면 시작하세요';
-        showScreen('ready');
+        state.currentIndex = 0;
+        showScreen('play');
+        renderQuestion();
       })
       .catch(function (err) { showSetupError(err.message); });
-  });
-
-  document.getElementById('backBtn1').addEventListener('click', function () { showScreen('setup'); });
-
-  document.getElementById('startBtn').addEventListener('click', function () {
-    QuizApi.call('startHostSession', { quizNo: state.quizNo }).then(function () {
-      state.currentIndex = 0;
-      showScreen('play');
-      renderQuestion();
-    });
   });
 
   function startStopwatch() {
@@ -75,7 +64,7 @@
     var q = state.questions[state.currentIndex];
     var total = state.questions.length;
     document.getElementById('qCounter').textContent = (state.currentIndex + 1) + ' / ' + total;
-    document.getElementById('titleBadge').textContent = (state.settings && state.settings.title) || '';
+    document.getElementById('titleBadge').textContent = (state.settings && state.settings.title) || '랜덤 퀴즈';
     document.getElementById('progressBar').style.width = Math.round(((state.currentIndex) / total) * 100) + '%';
     document.getElementById('qOrderLabel').textContent = '문제 ' + (state.currentIndex + 1);
     document.getElementById('questionText').textContent = q.question;

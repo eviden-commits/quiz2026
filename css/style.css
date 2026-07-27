@@ -346,6 +346,23 @@ canvas#confetti-canvas {
 }
 
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.host-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+@media (min-width: 760px) {
+  .host-layout { grid-template-columns: 1fr 300px; }
+}
+.host-side {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 18px;
+  align-self: start;
+}
+.host-side .winners-list { justify-content: flex-start; }
 .section-title {
   font-size: 15px;
   font-weight: 800;

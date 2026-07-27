@@ -91,3 +91,11 @@ function generateQuizSet_(p) {
   saveSettings_({ quizNo: quizNo, quizCount: picked.length });
   return { quizNo: quizNo, count: picked.length };
 }
+
+/**
+ * 참여형: 퀴즈번호를 직접 입력하지 않고 문항 수만으로 새 회차를 자동 생성한다.
+ */
+function createParticipantRound_(p) {
+  var quizNo = 'P' + new Date().getTime();
+  return generateQuizSet_({ quizNo: quizNo, count: p.count, category: p.category });
+}

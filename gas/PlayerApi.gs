@@ -4,6 +4,8 @@
 
 function openParticipantSession_(quizNo) {
   getQuizRows_(quizNo);
+  var existing = getSession_(quizNo, 'participant');
+  if (existing.status === 'closed') throw new Error('이미 마감된 회차입니다. 새 회차를 생성하세요. (재사용 불가)');
   return upsertSession_(quizNo, 'participant', { status: 'open', currentIndex: 0 });
 }
 

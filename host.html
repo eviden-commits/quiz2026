@@ -4,30 +4,22 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
 <title>진행자 화면 - 현장 퀴즈 챔피언</title>
-<link rel="stylesheet" href="css/style.css?v=2" />
+<link rel="stylesheet" href="css/style.css?v=3" />
 </head>
 <body>
 <div class="wrap">
 
-  <!-- 1. 불러오기 화면 -->
+  <!-- 1. 문항수 선택 화면 -->
   <div class="card" id="screen-setup">
     <h1 class="title">🎤 진행자 화면</h1>
-    <p class="subtitle">퀴즈 번호를 입력하고 불러오세요</p>
+    <p class="subtitle">진행할 문항 수를 선택하세요</p>
     <div id="setup-alert" class="alert error hidden"></div>
-    <label class="field-label">퀴즈 번호</label>
-    <input type="text" id="quizNoInput" placeholder="예: 1" inputmode="numeric" />
-    <button class="btn" id="loadBtn">불러오기</button>
+    <label class="field-label">문항 수</label>
+    <input type="text" id="questionCountInput" placeholder="예: 10" inputmode="numeric" value="10" />
+    <button class="btn" id="loadBtn">▶ 진행</button>
   </div>
 
-  <!-- 2. 진행 준비 화면 -->
-  <div class="card hidden" id="screen-ready">
-    <h1 class="title" id="readyTitle">퀴즈</h1>
-    <p class="subtitle" id="readySub"></p>
-    <button class="btn" id="startBtn">▶ 시작하기</button>
-    <button class="btn ghost" id="backBtn1">뒤로</button>
-  </div>
-
-  <!-- 3. 진행 화면 -->
+  <!-- 2. 진행 화면 (좌: 문제, 우: 정답자 입력) -->
   <div class="card wide hidden" id="screen-play">
     <div class="top-bar">
       <span class="badge" id="qCounter">1 / 10</span>
@@ -36,21 +28,23 @@
     </div>
     <div class="progress-outer"><div class="progress-inner" id="progressBar" style="width:0%"></div></div>
 
-    <div class="qorder" id="qOrderLabel">문제 1</div>
-    <div class="question-text" id="questionText"></div>
+    <div class="host-layout">
+      <div class="host-main">
+        <div class="qorder" id="qOrderLabel">문제 1</div>
+        <div class="question-text" id="questionText"></div>
+        <div class="choices" id="choicesBox"></div>
+        <div class="grid2" style="margin-top:20px;">
+          <button class="btn ghost" id="revealBtn">정답 공개</button>
+          <button class="btn" id="nextBtn">다음 문제 ▶</button>
+        </div>
+      </div>
 
-    <div class="choices" id="choicesBox"></div>
-
-    <div class="section-title">정답자 기록</div>
-    <div class="grid2">
-      <input type="text" id="winnerNameInput" placeholder="정답자 이름 입력" />
-      <button class="btn secondary" id="addWinnerBtn" style="margin-bottom:14px;">✋ 정답자 등록</button>
-    </div>
-    <div class="winners-list" id="winnersForQuestion"></div>
-
-    <div class="grid2" style="margin-top:20px;">
-      <button class="btn ghost" id="revealBtn">정답 공개</button>
-      <button class="btn" id="nextBtn">다음 문제 ▶</button>
+      <div class="host-side">
+        <div class="section-title" style="margin-top:0;">정답자 기록</div>
+        <input type="text" id="winnerNameInput" placeholder="정답자 이름 입력" />
+        <button class="btn secondary" id="addWinnerBtn">✋ 정답자 등록</button>
+        <div class="winners-list" id="winnersForQuestion"></div>
+      </div>
     </div>
   </div>
 
@@ -68,10 +62,10 @@
 
 </div>
 
-<script src="js/config.js?v=2"></script>
-<script src="js/api.js?v=2"></script>
-<script src="js/confetti.js?v=2"></script>
-<script src="js/auth.js?v=2"></script>
-<script src="js/host.js?v=2"></script>
+<script src="js/config.js?v=3"></script>
+<script src="js/api.js?v=3"></script>
+<script src="js/confetti.js?v=3"></script>
+<script src="js/auth.js?v=3"></script>
+<script src="js/host.js?v=3"></script>
 </body>
 </html>
