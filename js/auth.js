@@ -28,6 +28,9 @@ window.requireAppLogin = function (storageKey) {
         QuizApi.call('login', { password: pwInput.value })
           .then(function () {
             sessionStorage.setItem(storageKey, '1');
+            // 이후 관리자 전용 API 호출에 실어 보낼 수 있도록 비밀번호 자체도 세션에 보관한다.
+            // (서버는 이 값을 매 요청마다 재검증하므로, UI 게이트만으로는 우회 호출을 막을 수 없다.)
+            sessionStorage.setItem('quiz2026_pw', pwInput.value);
             document.body.removeChild(overlay);
             resolve(true);
           })

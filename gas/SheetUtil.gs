@@ -7,11 +7,13 @@ var SS = SpreadsheetApp.getActiveSpreadsheet();
 var SHEETS = {
   data: ['id', 'category', 'question', 'choice1', 'choice2', 'choice3', 'choice4', 'answer', 'points', 'active'],
   quiz: ['quizNo', 'order', 'question', 'choice1', 'choice2', 'choice3', 'choice4', 'answer', 'points'],
-  settings: ['quizNo', 'title', 'quizCount', 'prizeCount', 'winnerCount', 'prizeNames', 'timeLimitSec', 'createdAt'],
+  settings: ['quizNo', 'siteName', 'title', 'quizCount', 'prizeCount', 'winnerCount', 'prizeNames', 'timeLimitSec',
+    'randomizeFrom4th', 'luckyEnabled', 'luckyCount', 'createdAt'],
   participants: ['quizNo', 'code', 'name', 'correctCount', 'score', 'startTime', 'endTime', 'rank', 'status'],
   answers: ['quizNo', 'code', 'order', 'selected', 'correct', 'answeredAt'],
   sessions: ['quizNo', 'mode', 'status', 'currentIndex', 'accessCode', 'updatedAt'],
-  winners: ['quizNo', 'questionOrder', 'name', 'recordedAt']
+  winners: ['quizNo', 'questionOrder', 'name', 'recordedAt'],
+  luckyWinners: ['quizNo', 'code', 'name', 'drawnAt']
 };
 
 function getSheet_(name) {

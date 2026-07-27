@@ -16,3 +16,15 @@ function checkLogin_(password) {
   if (!ok) throw new Error('비밀번호가 올바르지 않습니다.');
   return { requireLogin: true, ok: true };
 }
+
+/**
+ * 관리자 전용 action은 클라이언트 UI 게이트만으로는 보호되지 않는다.
+ * (누구나 exec URL에 action=... 을 직접 호출할 수 있으므로) 서버에서도 반드시 재검증한다.
+ */
+function assertAuthorized_(password) {
+  var real = PropertiesService.getScriptProperties().getProperty('LoginPassWord');
+  if (!real) return; // 비밀번호 미설정 시 개발 편의를 위해 통과
+  if (String(password) !== String(real)) {
+    throw new Error('인증이 필요합니다. 관리자 비밀번호가 올바르지 않습니다.');
+  }
+}

@@ -4,10 +4,15 @@ window.QuizApi = (function () {
   var API_URL = window.QUIZ_CONFIG.API_URL;
 
   function call(action, payload) {
+    var body = Object.assign({}, payload || {});
+    // 로그인 게이트를 통과한 화면(admin/host)이면 관리자 전용 action 서버 재검증용 비밀번호를 함께 보낸다.
+    var pw = sessionStorage.getItem('quiz2026_pw');
+    if (pw && body.password === undefined) body.password = pw;
+
     return fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: action, payload: payload || {} })
+      body: JSON.stringify({ action: action, payload: body })
     })
       .then(function (res) { return res.json(); })
       .then(function (json) {

@@ -31,7 +31,20 @@ function doPost(e) {
   }
 }
 
+// 근로자(참여형/QR 접속)가 비밀번호 없이 호출해야 하는 action만 화이트리스트로 둔다.
+// 그 외 action은 전부 관리자 전용으로 간주해 서버에서 비밀번호를 재검증한다.
+var PUBLIC_ACTIONS = {
+  ping: true, authStatus: true, login: true,
+  joinWithAccessCode: true, getQuizForPlayer: true, submitAnswer: true,
+  finalizeParticipant: true, getParticipantSession: true, getLeaderboard: true,
+  getQuestionPoolText: true,
+  // 로그인 모달이 뜨기 전, 페이지 로드 시점에 바로 호출되는 비민감 조회성 action
+  listDataCategories: true
+};
+
 function route_(action, p) {
+  if (!PUBLIC_ACTIONS[action]) assertAuthorized_(p.password);
+
   switch (action) {
     case 'ping': return { pong: true, now: new Date() };
 
@@ -75,6 +88,7 @@ function route_(action, p) {
     case 'getLeaderboard': return getLeaderboard_(p.quizNo);
     case 'getTieGroupsForPrizes': return getTieGroupsForPrizes_(p.quizNo);
     case 'finalizeRanks': return finalizeRanks_(p);
+    case 'drawLuckyWinners': return drawLuckyWinners_(p.quizNo);
 
     default: throw new Error('알 수 없는 action: ' + action);
   }

@@ -186,29 +186,30 @@
 
   function renderLeaderboard(lb, myName) {
     var settings = lb.settings || {};
-    var winnerCount = Number(settings.winnerCount) || 0;
     var prizeNames = String(settings.prizeNames || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
 
     var table = document.getElementById('leaderboardTable');
     var rows = lb.ranking.slice(0, 10);
     var medal = { 1: '🥇', 2: '🥈', 3: '🥉' };
-    var showPrizeCol = winnerCount > 0 && prizeNames.length > 0;
 
-    table.innerHTML = '<tr><th>순위</th><th>이름</th><th>정답수</th><th>점수</th>' + (showPrizeCol ? '<th>상품</th>' : '') + '</tr>' +
+    table.innerHTML = '<tr><th>완료 순서</th><th>이름</th><th>정답수</th><th>점수</th></tr>' +
       rows.map(function (r) {
         var isMe = r.name === myName;
-        var prize = (showPrizeCol && Number(r.rank) <= winnerCount) ? (prizeNames[Number(r.rank) - 1] || '') : '';
         return '<tr style="' + (isMe ? 'outline:2px solid var(--accent);' : '') + '">' +
           '<td class="rank-badge">' + (medal[r.rank] || r.rank) + '</td>' +
           '<td>' + r.name + (isMe ? ' (나)' : '') + '</td>' +
-          '<td>' + r.correctCount + '</td><td>' + r.score + '</td>' +
-          (showPrizeCol ? '<td>' + prize + '</td>' : '') + '</tr>';
+          '<td>' + r.correctCount + '</td><td>' + r.score + '</td></tr>';
       }).join('');
 
+    // 최종 순위/상품은 진행자가 참석자 클로즈를 눌러야 확정되므로, 여기서는
+    // "당첨" 여부를 단정하지 않고 몇 번째로 완료했는지와 준비된 상품 목록만 안내한다.
     var myRow = lb.ranking.filter(function (r) { return r.name === myName; })[0];
     var banner = document.getElementById('myPrizeBanner');
-    if (myRow && showPrizeCol && Number(myRow.rank) <= winnerCount && prizeNames[Number(myRow.rank) - 1]) {
-      banner.textContent = '🎁 축하합니다! 획득 상품: ' + prizeNames[Number(myRow.rank) - 1];
+    var lines = [];
+    if (myRow) lines.push('✅ ' + myRow.rank + '번째로 완료했습니다.');
+    if (prizeNames.length) lines.push('🎁 준비된 상품: ' + prizeNames.join(', ') + ' (최종 순위는 마감 후 확정됩니다)');
+    if (lines.length) {
+      banner.innerHTML = lines.join('<br/>');
       banner.classList.remove('hidden');
     } else {
       banner.classList.add('hidden');

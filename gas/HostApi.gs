@@ -11,7 +11,7 @@ function startHostSession_(quizNo) {
  * 진행자형: 퀴즈번호 없이 문항 수만 받아 data 시트에서 랜덤 출제하고 바로 세션을 시작한다.
  */
 function startHostRandomQuiz_(p) {
-  var quizNo = 'H' + new Date().getTime();
+  var quizNo = generateQuizNo_();
   var gen = generateQuizSet_({ quizNo: quizNo, count: p.count, category: p.category });
   var session = startHostSession_(quizNo);
   var quiz = getQuizForHost_(quizNo);

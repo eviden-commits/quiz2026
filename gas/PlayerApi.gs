@@ -12,7 +12,8 @@ function openParticipantSession_(quizNo) {
   getQuizRows_(quizNo);
   var existing = getSession_(quizNo, 'participant');
   if (existing.status === 'closed') throw new Error('이미 마감된 회차입니다. 새 회차를 생성하세요. (재사용 불가)');
-  var accessCode = generateRandomCode_(4);
+  // quizNo에서 유도(CC+YY)해 같은 날 다른 회차와 절대 겹치지 않게 한다.
+  var accessCode = accessCodeFromQuizNo_(String(quizNo));
   return upsertSession_(quizNo, 'participant', { status: 'open', currentIndex: 0, accessCode: accessCode });
 }
 
@@ -140,13 +141,19 @@ function getTieGroupsForPrizes_(quizNo) {
     }
   });
 
+  // 4위부터 랜덤배정 옵션이 켜져 있으면 상위 3위까지만 동률 추첨 대상으로 본다.
+  // (4위 이하는 어차피 순서를 다시 섞을 것이므로 동률을 가려낼 필요가 없다)
+  var tieZoneLimit = (settings && (settings.randomizeFrom4th === true || settings.randomizeFrom4th === 'TRUE'))
+    ? Math.min(winnerCount, 3) : winnerCount;
+
   var tieGroups = [];
   var runningCount = 0;
   groups.forEach(function (g) {
     var start = runningCount + 1;
     runningCount += g.members.length;
-    if (g.members.length > 1 && winnerCount > 0 && start <= winnerCount) {
-      tieGroups.push({ startRank: start, members: g.members });
+    if (g.members.length > 1 && tieZoneLimit > 0 && start <= tieZoneLimit) {
+      var neededCount = Math.min(g.members.length, tieZoneLimit - start + 1);
+      tieGroups.push({ startRank: start, neededCount: neededCount, members: g.members });
     }
   });
 
@@ -154,11 +161,27 @@ function getTieGroupsForPrizes_(quizNo) {
 }
 
 /**
- * 동률 추첨(운명의 수레바퀴) 등으로 확정된 최종 순서를 받아 rank를 일괄 반영한다.
+ * 동률 추첨(운명의 수레바퀴) 등으로 확정된 순서를 받아 rank를 일괄 반영한다.
+ * randomizeFrom4th가 켜져 있으면 4위~수상자수 구간은 서버에서 다시 무작위로 섞는다.
  */
 function finalizeRanks_(p) {
   var quizNo = p.quizNo;
-  var orderedCodes = p.orderedCodes || [];
+  var orderedCodes = (p.orderedCodes || []).slice();
+  var settings = null;
+  try { settings = getSettings_(quizNo); } catch (e) { /* optional */ }
+  var winnerCount = settings ? Number(settings.winnerCount) || 0 : 0;
+  var randomizeFrom4th = settings && (settings.randomizeFrom4th === true || settings.randomizeFrom4th === 'TRUE');
+
+  if (randomizeFrom4th && winnerCount > 3) {
+    var start = 3, end = Math.min(winnerCount, orderedCodes.length); // index 3 = 4위
+    var segment = orderedCodes.slice(start, end);
+    for (var i = segment.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = segment[i]; segment[i] = segment[j]; segment[j] = tmp;
+    }
+    for (var k = 0; k < segment.length; k++) orderedCodes[start + k] = segment[k];
+  }
+
   var rows = sheetToObjects_(getSheet_('participants')).filter(function (r) {
     return String(r.quizNo) === String(quizNo) && r.status === 'finished';
   });
@@ -171,6 +194,35 @@ function finalizeRanks_(p) {
   });
 
   return getLeaderboard_(quizNo);
+}
+
+/**
+ * 행운상: 순위(1~winnerCount)와 무관하게 완료자 중에서 무작위로 luckyCount명을 뽑는다.
+ * 이미 순위 상품을 받은 사람은 중복 당첨되지 않도록 제외한다.
+ */
+function drawLuckyWinners_(quizNo) {
+  var settings = null;
+  try { settings = getSettings_(quizNo); } catch (e) { return { drawn: [] }; }
+  var luckyEnabled = settings && (settings.luckyEnabled === true || settings.luckyEnabled === 'TRUE');
+  var luckyCount = settings ? Number(settings.luckyCount) || 0 : 0;
+  if (!luckyEnabled || luckyCount <= 0) return { drawn: [] };
+
+  var winnerCount = Number(settings.winnerCount) || 0;
+  var pool = sheetToObjects_(getSheet_('participants')).filter(function (r) {
+    return String(r.quizNo) === String(quizNo) && r.status === 'finished' && Number(r.rank) > winnerCount;
+  });
+
+  for (var i = pool.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+  }
+  var drawn = pool.slice(0, Math.min(luckyCount, pool.length));
+  var drawnAt = new Date();
+  drawn.forEach(function (r) {
+    appendObject_('luckyWinners', { quizNo: quizNo, code: r.code, name: r.name, drawnAt: drawnAt });
+  });
+
+  return { drawn: drawn.map(function (r) { return { code: r.code, name: r.name }; }) };
 }
 
 function getLeaderboard_(quizNo) {

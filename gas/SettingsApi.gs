@@ -20,7 +20,7 @@ function listPastRounds_() {
   var rows = sheetToObjects_(getSheet_('settings'));
   rows.sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
   return rows.map(function (r) {
-    return { quizNo: r.quizNo, title: r.title, createdAt: r.createdAt };
+    return { quizNo: r.quizNo, title: r.title, siteName: r.siteName, createdAt: r.createdAt };
   });
 }
 
@@ -37,12 +37,16 @@ function saveSettings_(p) {
   var existing = rows.filter(function (r) { return String(r.quizNo) === String(p.quizNo); })[0];
   var obj = {
     quizNo: p.quizNo,
+    siteName: p.siteName !== undefined ? p.siteName : (existing ? existing.siteName : ''),
     title: p.title || ('퀴즈 ' + p.quizNo),
-    quizCount: p.quizCount || 0,
+    quizCount: p.quizCount || (existing ? existing.quizCount : 0),
     prizeCount: p.prizeCount || 0,
     winnerCount: p.winnerCount || 0,
     prizeNames: p.prizeNames || '',
     timeLimitSec: p.timeLimitSec || 0,
+    randomizeFrom4th: p.randomizeFrom4th !== undefined ? !!p.randomizeFrom4th : (existing ? existing.randomizeFrom4th : false),
+    luckyEnabled: p.luckyEnabled !== undefined ? !!p.luckyEnabled : (existing ? existing.luckyEnabled : false),
+    luckyCount: p.luckyCount !== undefined ? p.luckyCount : (existing ? existing.luckyCount : 0),
     createdAt: existing ? existing.createdAt : new Date()
   };
   if (existing) {
@@ -51,6 +55,41 @@ function saveSettings_(p) {
     appendObject_('settings', obj);
   }
   return obj;
+}
+
+/**
+ * 회차 번호 생성 규칙: X + YY + MM + DD + HH + mm + CC (총 13자리)
+ *  X  = 짝수년도면 1, 홀수년도면 2 (예: 2026 -> 1)
+ *  YY = 연도 뒤 2자리
+ *  CC = 오늘 생성된 회차 순번 (01부터)
+ * 접속코드(4자리)는 CC+YY로 유도해 같은 날 발급되는 코드끼리 충돌하지 않게 한다.
+ */
+function pad2_(n) { return (n < 10 ? '0' : '') + n; }
+
+function generateQuizNo_() {
+  var now = new Date();
+  var year = now.getFullYear();
+  var X = (year % 2 === 0) ? '1' : '2';
+  var YY = String(year).slice(-2);
+  var MM = pad2_(now.getMonth() + 1);
+  var DD = pad2_(now.getDate());
+  var HH = pad2_(now.getHours());
+  var mm = pad2_(now.getMinutes());
+
+  var todayStr = now.toDateString();
+  var rows = sheetToObjects_(getSheet_('settings'));
+  var countToday = rows.filter(function (r) {
+    return r.createdAt && new Date(r.createdAt).toDateString() === todayStr;
+  }).length;
+  var CC = pad2_(countToday + 1);
+
+  return X + YY + MM + DD + HH + mm + CC;
+}
+
+function accessCodeFromQuizNo_(quizNo) {
+  var CC = quizNo.slice(-2);
+  var YY = quizNo.slice(1, 3);
+  return CC + YY;
 }
 
 function listDataCategories_() {
@@ -107,6 +146,6 @@ function generateQuizSet_(p) {
  * 참여형: 퀴즈번호를 직접 입력하지 않고 문항 수만으로 새 회차를 자동 생성한다.
  */
 function createParticipantRound_(p) {
-  var quizNo = 'P' + new Date().getTime();
+  var quizNo = generateQuizNo_();
   return generateQuizSet_({ quizNo: quizNo, count: p.count, category: p.category });
 }

@@ -31,12 +31,22 @@
 
   function readSettingsForm() {
     return {
+      siteName: document.getElementById('setSiteName').value.trim(),
       title: document.getElementById('setTitle').value.trim(),
       prizeCount: document.getElementById('setPrizeCount').value.trim(),
       winnerCount: document.getElementById('setWinnerCount').value.trim(),
-      prizeNames: document.getElementById('setPrizeNames').value.trim()
+      prizeNames: document.getElementById('setPrizeNames').value.trim(),
+      randomizeFrom4th: document.getElementById('setRandomizeFrom4th').checked,
+      luckyEnabled: document.getElementById('setLuckyEnabled').checked,
+      luckyCount: document.getElementById('setLuckyCount').value.trim()
     };
   }
+
+  var luckyCheckbox = document.getElementById('setLuckyEnabled');
+  var luckyCountRow = document.getElementById('luckyCountRow');
+  luckyCheckbox.addEventListener('change', function () {
+    luckyCountRow.style.display = luckyCheckbox.checked ? 'grid' : 'none';
+  });
 
   // 2. 문항 추가 (새 회차 자동 생성 + 위에서 입력해둔 사전설정 자동 적용)
   document.getElementById('genBtn').addEventListener('click', function () {
@@ -52,7 +62,10 @@
         document.getElementById('qrBox').classList.add('hidden');
 
         var settings = readSettingsForm();
-        if (settings.title || settings.prizeCount !== '0' || settings.winnerCount !== '0' || settings.prizeNames) {
+        var hasSettings = settings.siteName || settings.title || settings.prizeNames ||
+          settings.prizeCount !== '0' || settings.winnerCount !== '0' ||
+          settings.randomizeFrom4th || settings.luckyEnabled;
+        if (hasSettings) {
           QuizApi.call('saveSettings', Object.assign({ quizNo: currentQuizNo }, settings))
             .then(function () { flash('settingsAlert', '사전설정이 새 회차에 적용되었습니다.', 'success'); })
             .catch(function () {});
@@ -86,10 +99,11 @@
     document.getElementById('qrBox').classList.remove('hidden');
   }
 
-  // 4. 참석자 클로즈 (상품 구간 동률이 있으면 운명의 수레바퀴로 추첨)
+  // 4. 참석자 클로즈 (상품 구간 동률이 있으면 운명의 수레바퀴로 추첨 + 행운상 추첨)
   document.getElementById('closeBtn').addEventListener('click', function () {
     if (!currentQuizNo) { flash('closeAlert', '진행 중인 회차가 없습니다.', 'error'); return; }
     var quizNo = currentQuizNo;
+    var winnerCount = 0;
 
     QuizApi.call('closeParticipantSession', { quizNo: quizNo })
       .then(function () {
@@ -98,14 +112,19 @@
         return QuizApi.call('getTieGroupsForPrizes', { quizNo: quizNo });
       })
       .then(function (result) {
-        if (!result.tieGroups.length) return;
+        winnerCount = result.winnerCount;
+        if (!result.tieGroups.length) {
+          return QuizApi.call('finalizeRanks', { quizNo: quizNo, orderedCodes: result.orderedCodes });
+        }
         return resolveTieGroupsSequentially(result.orderedCodes, result.tieGroups)
           .then(function (finalOrder) {
             return QuizApi.call('finalizeRanks', { quizNo: quizNo, orderedCodes: finalOrder });
-          })
-          .then(function (lb) {
-            showFinalResultPopup(lb);
           });
+      })
+      .then(function (lb) {
+        return QuizApi.call('drawLuckyWinners', { quizNo: quizNo }).then(function (lucky) {
+          showFinalResultPopup(lb, winnerCount, lucky.drawn);
+        });
       })
       .catch(function (err) { flash('closeAlert', err.message, 'error'); });
   });
@@ -121,7 +140,7 @@
       group.members.forEach(function (m) { codeToName[m.code] = m.name; });
       var names = group.members.map(function (m) { return m.name; });
 
-      return window.runTieBreakWheel(names, group.startRank).then(function (resolvedNames) {
+      return window.runTieBreakWheel(names, group.startRank, group.neededCount).then(function (resolvedNames) {
         var nameToCode = {};
         group.members.forEach(function (m) { nameToCode[m.name] = m.code; });
         var startIdx = group.startRank - 1;
@@ -134,16 +153,29 @@
     return next(0);
   }
 
-  function showFinalResultPopup(lb) {
+  function rankMarker(rank, winnerCount) {
+    if (rank === 1) return '👑';
+    if (rank === 2) return '<span class="crown-silver">👑</span>';
+    if (rank === 3) return '<span class="crown-bronze">👑</span>';
+    if (winnerCount > 3 && rank <= winnerCount) return '🥉';
+    return rank;
+  }
+
+  function showFinalResultPopup(lb, winnerCount, luckyWinners) {
     var overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,5,10,0.88);display:flex;align-items:center;justify-content:center;z-index:2500;';
-    var rows = lb.ranking.slice(0, 10).map(function (r) {
-      return '<tr><td>' + r.rank + '</td><td>' + r.name + '</td><td>' + r.correctCount + '</td><td>' + r.score + '</td></tr>';
+    var rows = lb.ranking.slice(0, 20).map(function (r) {
+      return '<tr><td class="rank-badge">' + rankMarker(Number(r.rank), winnerCount) + '</td><td>' + r.name + '</td><td>' + r.correctCount + '</td><td>' + r.score + '</td></tr>';
     }).join('');
+    var luckyHtml = (luckyWinners && luckyWinners.length)
+      ? '<div class="section-title">🍀 행운상</div><div class="winners-list">' +
+        luckyWinners.map(function (w) { return '<span class="winner-chip">' + w.name + '</span>'; }).join('') + '</div>'
+      : '';
     overlay.innerHTML =
       '<div class="card" style="max-width:480px;">' +
       '<h1 class="title" style="font-size:22px;">🏁 최종 순위 확정</h1>' +
       '<table class="leaderboard"><tr><th>순위</th><th>이름</th><th>정답수</th><th>점수</th></tr>' + rows + '</table>' +
+      luckyHtml +
       '<button class="btn" id="finalResultCloseBtn" style="margin-top:16px;">확인</button>' +
       '</div>';
     document.body.appendChild(overlay);
@@ -160,34 +192,91 @@
   }
 
   // 1. 사전설정 (선택사항) - 회차 생성 전이면 입력만 해두고, 아래 "문항 추가" 시 자동 적용된다.
-  document.getElementById('saveSettingsBtn').addEventListener('click', function () {
+  var saveSettingsBtn = document.getElementById('saveSettingsBtn');
+  var SAVE_LABEL = '① 설정 저장';
+
+  function markSettingsDirty() {
+    if (saveSettingsBtn.disabled) {
+      saveSettingsBtn.disabled = false;
+      saveSettingsBtn.textContent = SAVE_LABEL;
+    }
+  }
+  ['setSiteName', 'setTitle', 'setPrizeCount', 'setWinnerCount', 'setPrizeNames', 'setLuckyCount'].forEach(function (id) {
+    document.getElementById(id).addEventListener('input', markSettingsDirty);
+  });
+  ['setRandomizeFrom4th', 'setLuckyEnabled'].forEach(function (id) {
+    document.getElementById(id).addEventListener('change', markSettingsDirty);
+  });
+
+  saveSettingsBtn.addEventListener('click', function () {
     if (!currentQuizNo) {
       flash('settingsAlert', '입력해두신 내용은 아래에서 문항을 추가해 회차를 생성할 때 자동 적용됩니다.', 'info');
       return;
     }
-    QuizApi.call('saveSettings', Object.assign({ quizNo: currentQuizNo }, readSettingsForm()))
-      .then(function () { flash('settingsAlert', '저장되었습니다.', 'success'); })
-      .catch(function (err) { flash('settingsAlert', err.message, 'error'); });
+    var payload = Object.assign({ quizNo: currentQuizNo }, readSettingsForm());
+    saveSettingsBtn.disabled = true;
+    saveSettingsBtn.textContent = '저장 중...';
+
+    QuizApi.call('saveSettings', payload)
+      .then(function () {
+        // 실제로 시트에 반영됐는지 다시 읽어와서 확인한다.
+        return QuizApi.call('getSettings', { quizNo: currentQuizNo });
+      })
+      .then(function (saved) {
+        var matches = String(saved.title || '') === payload.title &&
+          String(saved.siteName || '') === payload.siteName &&
+          String(saved.prizeNames || '') === payload.prizeNames;
+        if (!matches) throw new Error('저장은 됐지만 값이 일치하지 않습니다. 다시 확인해주세요.');
+        flash('settingsAlert', '✅ 저장 확인 완료 (시트에 반영됨)', 'success');
+        saveSettingsBtn.textContent = '✅ 저장됨';
+      })
+      .catch(function (err) {
+        flash('settingsAlert', err.message, 'error');
+        saveSettingsBtn.disabled = false;
+        saveSettingsBtn.textContent = SAVE_LABEL;
+      });
   });
 
-  // 완료자 현황 (5초마다 갱신)
-  function refreshFinished() {
+  // 완료자 인원수만 가볍게 10초마다 갱신 (상세 목록은 모달에서 조회)
+  function refreshFinishedCount() {
     if (!currentQuizNo) return;
     QuizApi.call('getLeaderboard', { quizNo: currentQuizNo }).then(function (lb) {
       document.getElementById('finishedCount').textContent = '완료 ' + lb.ranking.length + '명';
-      var table = document.getElementById('finishedTable');
-      if (lb.ranking.length === 0) {
-        table.innerHTML = '';
-        return;
-      }
-      table.innerHTML = '<tr><th>순위</th><th>이름</th><th>정답수</th></tr>' +
-        lb.ranking.map(function (r) {
-          return '<tr><td>' + r.rank + '</td><td>' + r.name + '</td><td>' + r.correctCount + '</td></tr>';
-        }).join('');
     }).catch(function () {});
   }
-  document.getElementById('refreshFinishedBtn').addEventListener('click', refreshFinished);
-  setInterval(refreshFinished, 10000);
+  setInterval(refreshFinishedCount, 10000);
+
+  // 보고서형 모달: 완료 현황(진행 중) / 지난회차 결과 조회에 공용으로 사용
+  function showReportModal(title, lb) {
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,5,10,0.88);display:flex;align-items:center;justify-content:center;z-index:2500;';
+    var total = lb.ranking.length;
+    var rows = lb.ranking.slice(0, 20);
+    var siteName = lb.settings && lb.settings.siteName ? lb.settings.siteName + ' · ' : '';
+    overlay.innerHTML =
+      '<div class="card" style="max-width:520px;">' +
+      '<h1 class="title" style="font-size:22px;">' + title + '</h1>' +
+      '<p class="subtitle">' + siteName + '총 ' + total + '명 완료' + (total > 20 ? ' (상위 20명만 표시)' : '') + '</p>' +
+      '<table class="leaderboard"><tr><th>순위</th><th>이름</th><th>정답수</th><th>점수</th></tr>' +
+      rows.map(function (r) {
+        return '<tr><td>' + r.rank + '</td><td>' + r.name + '</td><td>' + r.correctCount + '</td><td>' + r.score + '</td></tr>';
+      }).join('') +
+      '</table>' +
+      '<button class="btn" id="reportModalCloseBtn" style="margin-top:16px;">닫기</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    overlay.querySelector('#reportModalCloseBtn').addEventListener('click', function () {
+      document.body.removeChild(overlay);
+    });
+  }
+
+  document.getElementById('refreshFinishedBtn').addEventListener('click', function () {
+    if (!currentQuizNo) { flash('closeAlert', '진행 중인 회차가 없습니다.', 'error'); return; }
+    QuizApi.call('getLeaderboard', { quizNo: currentQuizNo }).then(function (lb) {
+      document.getElementById('finishedCount').textContent = '완료 ' + lb.ranking.length + '명';
+      showReportModal('📋 완료 현황', lb);
+    });
+  });
 
   // 지난회차 결과
   document.getElementById('pastResultsLink').addEventListener('click', function (e) {
@@ -203,7 +292,8 @@
         var opt = document.createElement('option');
         opt.value = r.quizNo;
         var when = r.createdAt ? new Date(r.createdAt).toLocaleString('ko-KR') : '';
-        opt.textContent = (r.title || r.quizNo) + ' · ' + when;
+        var sitePrefix = r.siteName ? r.siteName + ' - ' : '';
+        opt.textContent = sitePrefix + (r.title || r.quizNo) + ' · ' + when;
         sel.appendChild(opt);
       });
     }).catch(function () {});
@@ -213,16 +303,7 @@
     var quizNo = document.getElementById('pastRoundsSelect').value;
     if (!quizNo) return;
     QuizApi.call('getLeaderboard', { quizNo: quizNo }).then(function (lb) {
-      var table = document.getElementById('pastResultsTable');
-      table.classList.remove('hidden');
-      if (lb.ranking.length === 0) {
-        table.innerHTML = '<tr><th>결과 없음</th></tr>';
-        return;
-      }
-      table.innerHTML = '<tr><th>순위</th><th>이름</th><th>정답수</th><th>점수</th></tr>' +
-        lb.ranking.map(function (r) {
-          return '<tr><td>' + r.rank + '</td><td>' + r.name + '</td><td>' + r.correctCount + '</td><td>' + r.score + '</td></tr>';
-        }).join('');
+      showReportModal('📊 지난회차 결과', lb);
     });
   });
 
