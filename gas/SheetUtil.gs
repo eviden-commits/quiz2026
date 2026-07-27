@@ -16,13 +16,18 @@ var SHEETS = {
 
 function getSheet_(name) {
   var sh = SS.getSheetByName(name);
+  var headers = SHEETS[name];
   if (!sh) {
     sh = SS.insertSheet(name);
-    sh.appendRow(SHEETS[name]);
+    sh.appendRow(headers);
     sh.setFrozenRows(1);
   } else if (sh.getLastRow() === 0) {
-    sh.appendRow(SHEETS[name]);
+    sh.appendRow(headers);
     sh.setFrozenRows(1);
+  } else {
+    var currentHeaders = sh.getRange(1, 1, 1, headers.length).getValues()[0];
+    var matches = headers.every(function (h, i) { return currentHeaders[i] === h; });
+    if (!matches) sh.getRange(1, 1, 1, headers.length).setValues([headers]);
   }
   return sh;
 }
