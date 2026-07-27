@@ -58,7 +58,7 @@ function route_(action, p) {
     case 'startHostSession': return startHostSession_(p.quizNo);
     case 'getHostSession': return getSession_(p.quizNo, 'host');
     case 'hostSetIndex': return hostSetIndex_(p.quizNo, p.index);
-    case 'recordHostWinner': return recordHostWinner_(p);
+    case 'recordHostWinnersBatch': return recordHostWinnersBatch_(p);
     case 'getHostWinners': return getHostWinners_(p.quizNo);
     case 'closeHostSession': return closeSession_(p.quizNo, 'host');
 

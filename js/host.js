@@ -6,7 +6,8 @@
     currentIndex: 0,
     revealed: false,
     stopwatchTimer: null,
-    stopwatchSec: 0
+    stopwatchSec: 0,
+    winners: [] // {questionOrder, name} - 로컬에만 쌓아두고 종료 시 한 번에 저장
   };
 
   var screens = {
@@ -85,28 +86,24 @@
   }
 
   function renderWinnersForCurrentQuestion() {
-    QuizApi.call('getHostWinners', { quizNo: state.quizNo }).then(function (winners) {
-      var order = state.currentIndex + 1;
-      var box = document.getElementById('winnersForQuestion');
-      box.innerHTML = '';
-      winners.filter(function (w) { return Number(w.questionOrder) === order; }).forEach(function (w) {
-        var chip = document.createElement('span');
-        chip.className = 'winner-chip';
-        chip.textContent = '✅ ' + w.name;
-        box.appendChild(chip);
-      });
+    var order = state.currentIndex + 1;
+    var box = document.getElementById('winnersForQuestion');
+    box.innerHTML = '';
+    state.winners.filter(function (w) { return w.questionOrder === order; }).forEach(function (w) {
+      var chip = document.createElement('span');
+      chip.className = 'winner-chip';
+      chip.textContent = '✅ ' + w.name;
+      box.appendChild(chip);
     });
   }
 
   document.getElementById('addWinnerBtn').addEventListener('click', function () {
-    var name = document.getElementById('winnerNameInput').value.trim();
+    var input = document.getElementById('winnerNameInput');
+    var name = input.value.trim();
     if (!name) return;
-    QuizApi.call('recordHostWinner', {
-      quizNo: state.quizNo, questionOrder: state.currentIndex + 1, name: name
-    }).then(function () {
-      document.getElementById('winnerNameInput').value = '';
-      renderWinnersForCurrentQuestion();
-    });
+    state.winners.push({ questionOrder: state.currentIndex + 1, name: name });
+    input.value = '';
+    renderWinnersForCurrentQuestion();
   });
 
   document.getElementById('revealBtn').addEventListener('click', function () {
@@ -121,36 +118,42 @@
   document.getElementById('nextBtn').addEventListener('click', function () {
     var total = state.questions.length;
     var nextIndex = state.currentIndex + 1;
-    QuizApi.call('hostSetIndex', { quizNo: state.quizNo, index: nextIndex }).then(function () {
-      if (nextIndex >= total) {
-        clearInterval(state.stopwatchTimer);
-        showEndScreen();
-      } else {
-        state.currentIndex = nextIndex;
-        renderQuestion();
-      }
-    });
+    // 세션 진행 상태 동기화는 화면 전환을 막지 않도록 백그라운드로 전송한다.
+    QuizApi.call('hostSetIndex', { quizNo: state.quizNo, index: nextIndex }).catch(function () {});
+    if (nextIndex >= total) {
+      clearInterval(state.stopwatchTimer);
+      showEndScreen();
+    } else {
+      state.currentIndex = nextIndex;
+      renderQuestion();
+    }
   });
 
   function showEndScreen() {
     showScreen('end');
     launchConfetti(4000);
-    QuizApi.call('getHostWinners', { quizNo: state.quizNo }).then(function (winners) {
-      var counts = {};
-      winners.forEach(function (w) { counts[w.name] = (counts[w.name] || 0) + 1; });
-      var names = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });
-      var list = document.getElementById('allWinnersList');
-      if (names.length === 0) {
-        list.innerHTML = '<p class="muted" style="text-align:center;">등록된 정답자가 없습니다.</p>';
-        return;
-      }
-      var table = document.createElement('table');
-      table.className = 'leaderboard';
-      table.innerHTML = '<tr><th>이름</th><th>정답 횟수</th></tr>' +
-        names.map(function (n) { return '<tr><td>' + n + '</td><td>' + counts[n] + '회</td></tr>'; }).join('');
-      list.innerHTML = '';
-      list.appendChild(table);
-    });
+    renderWinnersSummary();
+    // 정답자 기록은 여기서 한 번만 서버에 저장한다.
+    if (state.winners.length) {
+      QuizApi.call('recordHostWinnersBatch', { quizNo: state.quizNo, winners: state.winners }).catch(function () {});
+    }
+  }
+
+  function renderWinnersSummary() {
+    var counts = {};
+    state.winners.forEach(function (w) { counts[w.name] = (counts[w.name] || 0) + 1; });
+    var names = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });
+    var list = document.getElementById('allWinnersList');
+    if (names.length === 0) {
+      list.innerHTML = '<p class="muted" style="text-align:center;">등록된 정답자가 없습니다.</p>';
+      return;
+    }
+    var table = document.createElement('table');
+    table.className = 'leaderboard';
+    table.innerHTML = '<tr><th>이름</th><th>정답 횟수</th></tr>' +
+      names.map(function (n) { return '<tr><td>' + n + '</td><td>' + counts[n] + '회</td></tr>'; }).join('');
+    list.innerHTML = '';
+    list.appendChild(table);
   }
 
   requireAppLogin('quiz2026_host_auth');

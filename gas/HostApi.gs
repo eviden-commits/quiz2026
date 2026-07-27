@@ -25,11 +25,29 @@ function hostSetIndex_(quizNo, index) {
   return upsertSession_(quizNo, 'host', { currentIndex: idx, status: status });
 }
 
-function recordHostWinner_(p) {
-  appendObject_('winners', {
-    quizNo: p.quizNo, questionOrder: p.questionOrder, name: p.name, recordedAt: new Date()
+/**
+ * 진행 중에는 정답자를 화면(브라우저) 메모리에만 쌓아두고,
+ * 퀴즈 종료 시 한 번에 배치로 저장해 매 등록마다 GAS 왕복이 생기지 않게 한다.
+ */
+function recordHostWinnersBatch_(p) {
+  var quizNo = p.quizNo;
+  var winners = p.winners || [];
+  var recordedAt = new Date();
+  var sheet = getSheet_('winners');
+  var headers = SHEETS.winners;
+  var rows = winners.map(function (w) {
+    return headers.map(function (h) {
+      if (h === 'quizNo') return quizNo;
+      if (h === 'questionOrder') return w.questionOrder;
+      if (h === 'name') return w.name;
+      if (h === 'recordedAt') return recordedAt;
+      return '';
+    });
   });
-  return { ok: true };
+  if (rows.length) {
+    sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, headers.length).setValues(rows);
+  }
+  return { saved: rows.length };
 }
 
 function getHostWinners_(quizNo) {
