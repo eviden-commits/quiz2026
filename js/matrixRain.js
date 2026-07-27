@@ -51,12 +51,21 @@
       ctx.fillStyle = currentColor;
       ctx.font = fontSize + 'px monospace';
       for (var i = 0; i < columns; i++) {
-        var ch = Math.random() < 0.06 ? randomHexToken() : chars[Math.floor(Math.random() * chars.length)];
-        ctx.fillText(ch, i * fontSize, drops[i] * fontSize);
+        if (Math.random() < 0.06) {
+          // 0x____ 토큰도 다른 글자들처럼 세로로 한 글자씩 쌓아서 그린다.
+          var token = randomHexToken();
+          for (var k = 0; k < token.length; k++) {
+            ctx.fillText(token[k], i * fontSize, (drops[i] + k) * fontSize);
+          }
+          drops[i] += token.length;
+        } else {
+          var ch = chars[Math.floor(Math.random() * chars.length)];
+          ctx.fillText(ch, i * fontSize, drops[i] * fontSize);
+          drops[i]++;
+        }
         if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
           drops[i] = 0;
         }
-        drops[i]++;
       }
     }
     setInterval(frame, 60);
