@@ -1,12 +1,15 @@
 (function () {
+  var QUESTION_TIME_SEC = 10;
+  var NEXT_DELAY_MS = 3000;
+
   var state = {
     quizNo: null,
     code: null,
     questions: [],
     currentIndex: 0,
     locked: false,
-    countdownTimer: null,
-    remainingSec: null
+    questionTimer: null,
+    questionRemainingSec: null
   };
 
   var screens = {
@@ -44,35 +47,30 @@
       })
       .then(function (questions) {
         state.questions = questions;
-        return QuizApi.call('getSettings', { quizNo: quizNo }).catch(function () { return null; });
-      })
-      .then(function (settings) {
-        if (settings && Number(settings.timeLimitSec) > 0) startCountdown(Number(settings.timeLimitSec));
         showScreen('quiz');
         renderQuestion();
       })
       .catch(function (err) { showJoinError(err.message); });
   });
 
-  function startCountdown(sec) {
-    state.remainingSec = sec;
-    updateCountdownDisplay();
-    state.countdownTimer = setInterval(function () {
-      state.remainingSec--;
-      updateCountdownDisplay();
-      if (state.remainingSec <= 0) {
-        clearInterval(state.countdownTimer);
-        lockAndGoToName();
+  function startQuestionTimer() {
+    clearInterval(state.questionTimer);
+    state.questionRemainingSec = QUESTION_TIME_SEC;
+    updateQuestionTimerDisplay();
+    state.questionTimer = setInterval(function () {
+      state.questionRemainingSec--;
+      updateQuestionTimerDisplay();
+      if (state.questionRemainingSec <= 0) {
+        clearInterval(state.questionTimer);
+        handleTimeout();
       }
     }, 1000);
   }
 
-  function updateCountdownDisplay() {
+  function updateQuestionTimerDisplay() {
     var el = document.getElementById('countdown');
-    var m = Math.floor(state.remainingSec / 60);
-    var s = state.remainingSec % 60;
-    el.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-    el.classList.toggle('urgent', state.remainingSec <= 10);
+    el.textContent = '00:' + (state.questionRemainingSec < 10 ? '0' : '') + state.questionRemainingSec;
+    el.classList.toggle('urgent', state.questionRemainingSec <= 3);
   }
 
   function renderQuestion() {
@@ -92,11 +90,26 @@
       btn.addEventListener('click', function () { selectAnswer(q[key], btn); });
       box.appendChild(btn);
     });
+
+    state.locked = false;
+    startQuestionTimer();
+  }
+
+  function goToNextQuestionAfterDelay() {
+    setTimeout(function () {
+      state.currentIndex++;
+      if (state.currentIndex >= state.questions.length) {
+        goToNameScreen('모든 문제를 풀었습니다. 이름을 입력하고 제출하세요.');
+      } else {
+        renderQuestion();
+      }
+    }, NEXT_DELAY_MS);
   }
 
   function selectAnswer(value, btnEl) {
     if (state.locked) return;
     state.locked = true;
+    clearInterval(state.questionTimer);
     var q = state.questions[state.currentIndex];
     document.querySelectorAll('#choicesBox .choice-btn').forEach(function (b) { b.disabled = true; });
     btnEl.classList.add('selected');
@@ -106,24 +119,26 @@
     }).then(function (result) {
       btnEl.classList.remove('selected');
       btnEl.classList.add(result.correct ? 'correct' : 'wrong');
-      setTimeout(function () {
-        state.locked = false;
-        state.currentIndex++;
-        if (state.currentIndex >= state.questions.length) {
-          if (state.countdownTimer) clearInterval(state.countdownTimer);
-          goToNameScreen('모든 문제를 풀었습니다. 이름을 입력하고 제출하세요.');
-        } else {
-          renderQuestion();
-        }
-      }, 700);
+      goToNextQuestionAfterDelay();
     }).catch(function (err) {
       state.locked = false;
       alert(err.message);
     });
   }
 
-  function lockAndGoToName() {
-    goToNameScreen('시간이 종료되었습니다. 이름을 입력하고 제출하세요.');
+  function handleTimeout() {
+    if (state.locked) return;
+    state.locked = true;
+    var q = state.questions[state.currentIndex];
+    document.querySelectorAll('#choicesBox .choice-btn').forEach(function (b) { b.disabled = true; });
+
+    QuizApi.call('submitAnswer', {
+      quizNo: state.quizNo, code: state.code, order: q.order, selected: '__TIMEOUT__'
+    }).then(function () {
+      goToNextQuestionAfterDelay();
+    }).catch(function () {
+      goToNextQuestionAfterDelay();
+    });
   }
 
   function goToNameScreen(message) {
