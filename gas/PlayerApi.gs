@@ -15,14 +15,46 @@ function claimCode_(quizNo, code) {
 
   var sheet = getSheet_('participants');
   var rows = sheetToObjects_(sheet);
-  var dup = rows.filter(function (r) { return String(r.quizNo) === String(quizNo) && String(r.code) === code; })[0];
-  if (dup) throw new Error('이미 사용 중인 참여코드입니다. 다른 번호를 입력하세요.');
+  var row = rows.filter(function (r) { return String(r.quizNo) === String(quizNo) && String(r.code) === code; })[0];
 
-  appendObject_('participants', {
-    quizNo: quizNo, code: code, name: '', correctCount: 0, score: 0,
-    startTime: new Date(), endTime: '', rank: '', status: 'playing'
-  });
+  if (!row) throw new Error('유효하지 않은 참여코드입니다. 진행자에게 확인하세요.');
+  if (row.status !== 'unassigned') throw new Error('이미 사용 중인 참여코드입니다. 다른 번호를 입력하세요.');
+
+  updateRow_('participants', row._row, { startTime: new Date(), status: 'playing' });
   return { quizNo: quizNo, code: code };
+}
+
+function generateParticipantCodes_(p) {
+  var quizNo = p.quizNo;
+  var count = Number(p.count) || 10;
+  var digits = Number(p.digits) || 4;
+  var min = Math.pow(10, digits - 1);
+  var max = Math.pow(10, digits) - 1;
+
+  var sheet = getSheet_('participants');
+  var existing = sheetToObjects_(sheet).filter(function (r) { return String(r.quizNo) === String(quizNo); });
+  var used = {};
+  existing.forEach(function (r) { used[String(r.code)] = true; });
+
+  var codes = [];
+  var attempts = 0;
+  while (codes.length < count && attempts < count * 50) {
+    attempts++;
+    var candidate = String(Math.floor(min + Math.random() * (max - min + 1)));
+    if (used[candidate]) continue;
+    used[candidate] = true;
+    codes.push(candidate);
+  }
+  if (codes.length < count) throw new Error('생성 가능한 코드 조합이 부족합니다. 자릿수를 늘려주세요.');
+
+  codes.forEach(function (code) {
+    appendObject_('participants', {
+      quizNo: quizNo, code: code, name: '', correctCount: 0, score: 0,
+      startTime: '', endTime: '', rank: '', status: 'unassigned'
+    });
+  });
+
+  return { quizNo: quizNo, codes: codes };
 }
 
 function getParticipantRow_(quizNo, code) {

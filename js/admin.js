@@ -56,7 +56,21 @@
     }).catch(function (err) { flash('settingsAlert', err.message, 'error'); });
   });
 
-  // 3. 진행 제어
+  // 3. 참여코드 발급
+  document.getElementById('genCodesBtn').addEventListener('click', function () {
+    var quizNo = document.getElementById('codeQuizNo').value.trim();
+    var count = document.getElementById('codeCount').value.trim();
+    var digits = document.getElementById('codeDigits').value.trim();
+    if (!quizNo) { flash('codeAlert', '퀴즈 번호를 입력하세요.', 'error'); return; }
+    QuizApi.call('generateParticipantCodes', { quizNo: quizNo, count: count, digits: digits })
+      .then(function (res) {
+        flash('codeAlert', res.codes.length + '개 참여코드가 생성되었습니다.', 'success');
+        document.getElementById('codesOutput').value = res.codes.join(', ');
+      })
+      .catch(function (err) { flash('codeAlert', err.message, 'error'); });
+  });
+
+  // 4. 진행 제어
   document.getElementById('openPartBtn').addEventListener('click', function () {
     var quizNo = document.getElementById('sessQuizNo').value.trim();
     if (!quizNo) { flash('sessionAlert', '퀴즈 번호를 입력하세요.', 'error'); return; }

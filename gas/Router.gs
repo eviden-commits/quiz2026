@@ -62,6 +62,7 @@ function route_(action, p) {
 
     // ---- participant mode ----
     case 'claimCode': return claimCode_(p.quizNo, p.code);
+    case 'generateParticipantCodes': return generateParticipantCodes_(p);
     case 'submitAnswer': return submitAnswer_(p);
     case 'finalizeParticipant': return finalizeParticipant_(p);
     case 'openParticipantSession': return openParticipantSession_(p.quizNo);

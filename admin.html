@@ -51,7 +51,24 @@
     <input type="text" id="setTimeLimit" value="0" />
     <button class="btn" id="saveSettingsBtn">설정 저장</button>
 
-    <div class="section-title">3. 진행 제어</div>
+    <div class="section-title">3. 참여코드 발급 (진행자가 사전 생성)</div>
+    <div id="codeAlert" class="alert hidden"></div>
+    <label class="field-label">퀴즈 번호</label>
+    <input type="text" id="codeQuizNo" placeholder="예: 1" />
+    <div class="grid2">
+      <div>
+        <label class="field-label">발급 인원 수</label>
+        <input type="text" id="codeCount" placeholder="예: 30" value="30" />
+      </div>
+      <div>
+        <label class="field-label">코드 자릿수</label>
+        <input type="text" id="codeDigits" value="4" />
+      </div>
+    </div>
+    <button class="btn secondary" id="genCodesBtn">🔢 참여코드 일괄 생성</button>
+    <textarea id="codesOutput" rows="4" readonly placeholder="생성된 코드가 여기에 표시됩니다" style="margin-top:10px;"></textarea>
+
+    <div class="section-title">4. 진행 제어</div>
     <div id="sessionAlert" class="alert hidden"></div>
     <label class="field-label">퀴즈 번호</label>
     <input type="text" id="sessQuizNo" placeholder="예: 1" />
@@ -65,7 +82,7 @@
     </div>
     <p class="muted" id="sessionStatus" style="text-align:center; margin-top:10px;"></p>
 
-    <div class="section-title">4. 참여 QR / 링크</div>
+    <div class="section-title">5. 참여 QR / 링크</div>
     <label class="field-label">퀴즈 번호</label>
     <input type="text" id="qrQuizNo" placeholder="예: 1" />
     <button class="btn ghost" id="genQrBtn">QR 생성</button>
