@@ -13,6 +13,17 @@ function listSettings_() {
   return sheetToObjects_(getSheet_('settings'));
 }
 
+/**
+ * 관리자 화면의 "지난회차 결과" 목록용. 최근 생성 순으로 정렬.
+ */
+function listPastRounds_() {
+  var rows = sheetToObjects_(getSheet_('settings'));
+  rows.sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
+  return rows.map(function (r) {
+    return { quizNo: r.quizNo, title: r.title, createdAt: r.createdAt };
+  });
+}
+
 function listQuizNos_() {
   var rows = sheetToObjects_(getSheet_('quiz'));
   var set = {};

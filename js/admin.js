@@ -121,5 +121,42 @@
   document.getElementById('refreshFinishedBtn').addEventListener('click', refreshFinished);
   setInterval(refreshFinished, 10000);
 
+  // 지난회차 결과
+  document.getElementById('pastResultsLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    var panel = document.getElementById('pastResultsPanel');
+    panel.classList.toggle('hidden');
+    if (panel.classList.contains('hidden')) return;
+
+    QuizApi.call('listPastRounds', {}).then(function (rounds) {
+      var sel = document.getElementById('pastRoundsSelect');
+      sel.innerHTML = '';
+      rounds.forEach(function (r) {
+        var opt = document.createElement('option');
+        opt.value = r.quizNo;
+        var when = r.createdAt ? new Date(r.createdAt).toLocaleString('ko-KR') : '';
+        opt.textContent = (r.title || r.quizNo) + ' · ' + when;
+        sel.appendChild(opt);
+      });
+    }).catch(function () {});
+  });
+
+  document.getElementById('loadPastResultBtn').addEventListener('click', function () {
+    var quizNo = document.getElementById('pastRoundsSelect').value;
+    if (!quizNo) return;
+    QuizApi.call('getLeaderboard', { quizNo: quizNo }).then(function (lb) {
+      var table = document.getElementById('pastResultsTable');
+      table.classList.remove('hidden');
+      if (lb.ranking.length === 0) {
+        table.innerHTML = '<tr><th>결과 없음</th></tr>';
+        return;
+      }
+      table.innerHTML = '<tr><th>순위</th><th>이름</th><th>정답수</th><th>점수</th></tr>' +
+        lb.ranking.map(function (r) {
+          return '<tr><td>' + r.rank + '</td><td>' + r.name + '</td><td>' + r.correctCount + '</td><td>' + r.score + '</td></tr>';
+        }).join('');
+    });
+  });
+
   requireAppLogin('quiz2026_admin_auth');
 })();

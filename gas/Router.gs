@@ -43,6 +43,7 @@ function route_(action, p) {
     case 'getSettings': return getSettings_(p.quizNo);
     case 'saveSettings': return saveSettings_(p);
     case 'listSettings': return listSettings_();
+    case 'listPastRounds': return listPastRounds_();
     case 'listDataCategories': return listDataCategories_();
     case 'generateQuizSet': return generateQuizSet_(p);
     case 'createParticipantRound': return createParticipantRound_(p);

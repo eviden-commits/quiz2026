@@ -185,16 +185,33 @@
   });
 
   function renderLeaderboard(lb, myName) {
+    var settings = lb.settings || {};
+    var winnerCount = Number(settings.winnerCount) || 0;
+    var prizeNames = String(settings.prizeNames || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+
     var table = document.getElementById('leaderboardTable');
     var rows = lb.ranking.slice(0, 10);
     var medal = { 1: '🥇', 2: '🥈', 3: '🥉' };
-    table.innerHTML = '<tr><th>순위</th><th>이름</th><th>정답수</th><th>점수</th></tr>' +
+    var showPrizeCol = winnerCount > 0 && prizeNames.length > 0;
+
+    table.innerHTML = '<tr><th>순위</th><th>이름</th><th>정답수</th><th>점수</th>' + (showPrizeCol ? '<th>상품</th>' : '') + '</tr>' +
       rows.map(function (r) {
         var isMe = r.name === myName;
+        var prize = (showPrizeCol && Number(r.rank) <= winnerCount) ? (prizeNames[Number(r.rank) - 1] || '') : '';
         return '<tr style="' + (isMe ? 'outline:2px solid var(--accent);' : '') + '">' +
           '<td class="rank-badge">' + (medal[r.rank] || r.rank) + '</td>' +
           '<td>' + r.name + (isMe ? ' (나)' : '') + '</td>' +
-          '<td>' + r.correctCount + '</td><td>' + r.score + '</td></tr>';
+          '<td>' + r.correctCount + '</td><td>' + r.score + '</td>' +
+          (showPrizeCol ? '<td>' + prize + '</td>' : '') + '</tr>';
       }).join('');
+
+    var myRow = lb.ranking.filter(function (r) { return r.name === myName; })[0];
+    var banner = document.getElementById('myPrizeBanner');
+    if (myRow && showPrizeCol && Number(myRow.rank) <= winnerCount && prizeNames[Number(myRow.rank) - 1]) {
+      banner.textContent = '🎁 축하합니다! 획득 상품: ' + prizeNames[Number(myRow.rank) - 1];
+      banner.classList.remove('hidden');
+    } else {
+      banner.classList.add('hidden');
+    }
   }
 })();
