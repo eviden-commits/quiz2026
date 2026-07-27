@@ -16,9 +16,7 @@
     end: document.getElementById('screen-end')
   };
 
-  function showScreen(name) {
-    Object.keys(screens).forEach(function (k) { screens[k].classList.toggle('hidden', k !== name); });
-  }
+  function showScreen(name) { showScreenAnimated(screens, name); }
 
   function showSetupError(msg) {
     var box = document.getElementById('setup-alert');

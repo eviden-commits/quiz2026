@@ -19,9 +19,7 @@
     result: document.getElementById('screen-result')
   };
 
-  function showScreen(name) {
-    Object.keys(screens).forEach(function (k) { screens[k].classList.toggle('hidden', k !== name); });
-  }
+  function showScreen(name) { showScreenAnimated(screens, name); }
 
   function showJoinError(msg) {
     var box = document.getElementById('join-alert');
