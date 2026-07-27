@@ -102,5 +102,23 @@
     }).catch(function (err) { flash('settingsAlert', err.message, 'error'); });
   });
 
+  // 완료자 현황 (5초마다 갱신)
+  function refreshFinished() {
+    if (!currentQuizNo) return;
+    QuizApi.call('getLeaderboard', { quizNo: currentQuizNo }).then(function (lb) {
+      document.getElementById('finishedCount').textContent = '완료 ' + lb.ranking.length + '명';
+      var table = document.getElementById('finishedTable');
+      if (lb.ranking.length === 0) {
+        table.innerHTML = '';
+        return;
+      }
+      table.innerHTML = '<tr><th>순위</th><th>이름</th><th>정답수</th></tr>' +
+        lb.ranking.map(function (r) {
+          return '<tr><td>' + r.rank + '</td><td>' + r.name + '</td><td>' + r.correctCount + '</td></tr>';
+        }).join('');
+    }).catch(function () {});
+  }
+  setInterval(refreshFinished, 5000);
+
   requireAppLogin('quiz2026_admin_auth');
 })();
