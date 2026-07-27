@@ -29,7 +29,16 @@
     });
   }).catch(function () {});
 
-  // 1. 문항 추가 (새 회차 자동 생성)
+  function readSettingsForm() {
+    return {
+      title: document.getElementById('setTitle').value.trim(),
+      prizeCount: document.getElementById('setPrizeCount').value.trim(),
+      winnerCount: document.getElementById('setWinnerCount').value.trim(),
+      prizeNames: document.getElementById('setPrizeNames').value.trim()
+    };
+  }
+
+  // 2. 문항 추가 (새 회차 자동 생성 + 위에서 입력해둔 사전설정 자동 적용)
   document.getElementById('genBtn').addEventListener('click', function () {
     var count = document.getElementById('genCount').value.trim();
     var category = document.getElementById('genCategory').value;
@@ -41,6 +50,13 @@
         document.getElementById('sessionStatus').textContent = '';
         document.getElementById('accessCodeBox').classList.add('hidden');
         document.getElementById('qrBox').classList.add('hidden');
+
+        var settings = readSettingsForm();
+        if (settings.title || settings.prizeCount !== '0' || settings.winnerCount !== '0' || settings.prizeNames) {
+          QuizApi.call('saveSettings', Object.assign({ quizNo: currentQuizNo }, settings))
+            .then(function () { flash('settingsAlert', '사전설정이 새 회차에 적용되었습니다.', 'success'); })
+            .catch(function () {});
+        }
       })
       .catch(function (err) { flash('genAlert', err.message, 'error'); });
   });
@@ -88,18 +104,15 @@
     });
   }
 
-  // 사전설정 (선택사항)
+  // 1. 사전설정 (선택사항) - 회차 생성 전이면 입력만 해두고, 아래 "문항 추가" 시 자동 적용된다.
   document.getElementById('saveSettingsBtn').addEventListener('click', function () {
-    if (!currentQuizNo) { flash('settingsAlert', '먼저 문항을 추가해 회차를 생성하세요.', 'error'); return; }
-    QuizApi.call('saveSettings', {
-      quizNo: currentQuizNo,
-      title: document.getElementById('setTitle').value.trim(),
-      prizeCount: document.getElementById('setPrizeCount').value.trim(),
-      winnerCount: document.getElementById('setWinnerCount').value.trim(),
-      prizeNames: document.getElementById('setPrizeNames').value.trim()
-    }).then(function () {
-      flash('settingsAlert', '저장되었습니다.', 'success');
-    }).catch(function (err) { flash('settingsAlert', err.message, 'error'); });
+    if (!currentQuizNo) {
+      flash('settingsAlert', '입력해두신 내용은 아래에서 문항을 추가해 회차를 생성할 때 자동 적용됩니다.', 'info');
+      return;
+    }
+    QuizApi.call('saveSettings', Object.assign({ quizNo: currentQuizNo }, readSettingsForm()))
+      .then(function () { flash('settingsAlert', '저장되었습니다.', 'success'); })
+      .catch(function (err) { flash('settingsAlert', err.message, 'error'); });
   });
 
   // 완료자 현황 (5초마다 갱신)
