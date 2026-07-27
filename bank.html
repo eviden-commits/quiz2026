@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>문제은행 - 현장 퀴즈 챔피언</title>
+<link rel="stylesheet" href="css/style.css?v=10" />
+</head>
+<body>
+<div class="wrap">
+  <div class="card wide">
+    <div class="brandmark">QUIZ CHAMPION · 문제은행</div>
+    <h1 class="title" style="font-size:28px;">📚 문제 추가</h1>
+    <p class="subtitle">문제 / 문항(4지선다) / 정답을 입력하세요</p>
+
+    <div id="bankAlert" class="alert hidden"></div>
+
+    <div id="entriesBox"></div>
+
+    <div class="grid2" style="margin-top:8px;">
+      <button class="btn secondary" id="addEntryBtn">➕ 문제 추가</button>
+      <button class="btn" id="saveAllBtn">💾 문제은행에 저장</button>
+    </div>
+  </div>
+</div>
+
+<template id="entryTemplate">
+  <div class="qbank-entry">
+    <button type="button" class="qbank-remove" title="삭제">✕</button>
+    <label class="field-label">카테고리 (선택)</label>
+    <input type="text" class="qb-category" placeholder="예: 안전상식" />
+    <label class="field-label">문제</label>
+    <input type="text" class="qb-question" placeholder="문제를 입력하세요" />
+    <div class="grid2">
+      <div>
+        <label class="field-label"><input type="radio" name="qb-answer" value="1" class="qb-answer-radio" /> 문항 1 (정답이면 체크)</label>
+        <input type="text" class="qb-choice1" placeholder="문항 1" />
+      </div>
+      <div>
+        <label class="field-label"><input type="radio" name="qb-answer" value="2" class="qb-answer-radio" /> 문항 2 (정답이면 체크)</label>
+        <input type="text" class="qb-choice2" placeholder="문항 2" />
+      </div>
+      <div>
+        <label class="field-label"><input type="radio" name="qb-answer" value="3" class="qb-answer-radio" /> 문항 3 (정답이면 체크)</label>
+        <input type="text" class="qb-choice3" placeholder="문항 3" />
+      </div>
+      <div>
+        <label class="field-label"><input type="radio" name="qb-answer" value="4" class="qb-answer-radio" /> 문항 4 (정답이면 체크)</label>
+        <input type="text" class="qb-choice4" placeholder="문항 4" />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script src="js/config.js?v=10"></script>
+<script src="js/api.js?v=10"></script>
+<script src="js/matrixRain.js?v=10"></script>
+<script src="js/auth.js?v=10"></script>
+<script src="js/bank.js?v=10"></script>
+</body>
+</html>

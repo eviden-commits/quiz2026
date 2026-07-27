@@ -9,8 +9,15 @@
     currentIndex: 0,
     locked: false,
     questionTimer: null,
-    questionRemainingSec: null
+    questionRemainingSec: null,
+    answeredCount: 0,
+    wrongCount: 0
   };
+
+  function updateMatrixMood() {
+    if (!window.setMatrixWrongRatio || state.answeredCount === 0) return;
+    setMatrixWrongRatio(state.wrongCount / state.answeredCount);
+  }
 
   var screens = {
     join: document.getElementById('screen-join'),
@@ -45,6 +52,9 @@
       })
       .then(function (questions) {
         state.questions = questions;
+        state.answeredCount = 0;
+        state.wrongCount = 0;
+        if (window.setMatrixWrongRatio) setMatrixWrongRatio(0);
         showScreen('quiz');
         renderQuestion();
       })
@@ -77,7 +87,9 @@
     document.getElementById('qCounter').textContent = (state.currentIndex + 1) + ' / ' + total;
     document.getElementById('progressBar').style.width = Math.round((state.currentIndex / total) * 100) + '%';
     document.getElementById('qOrderLabel').textContent = '문제 ' + (state.currentIndex + 1);
-    document.getElementById('questionText').textContent = q.question;
+    var questionEl = document.getElementById('questionText');
+    questionEl.textContent = q.question;
+    questionEl.classList.remove('is-wrong', 'is-correct');
 
     var box = document.getElementById('choicesBox');
     box.innerHTML = '';
@@ -117,6 +129,10 @@
     }).then(function (result) {
       btnEl.classList.remove('selected');
       btnEl.classList.add(result.correct ? 'correct' : 'wrong');
+      document.getElementById('questionText').classList.add(result.correct ? 'is-correct' : 'is-wrong');
+      state.answeredCount++;
+      if (!result.correct) state.wrongCount++;
+      updateMatrixMood();
       goToNextQuestionAfterDelay();
     }).catch(function (err) {
       state.locked = false;
@@ -129,6 +145,10 @@
     state.locked = true;
     var q = state.questions[state.currentIndex];
     document.querySelectorAll('#choicesBox .choice-btn').forEach(function (b) { b.disabled = true; });
+    document.getElementById('questionText').classList.add('is-wrong');
+    state.answeredCount++;
+    state.wrongCount++;
+    updateMatrixMood();
 
     QuizApi.call('submitAnswer', {
       quizNo: state.quizNo, code: state.code, order: q.order, selected: '__TIMEOUT__'

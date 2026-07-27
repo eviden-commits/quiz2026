@@ -46,6 +46,8 @@ function route_(action, p) {
     case 'listDataCategories': return listDataCategories_();
     case 'generateQuizSet': return generateQuizSet_(p);
     case 'createParticipantRound': return createParticipantRound_(p);
+    case 'addQuestionsBatch': return addQuestionsBatch_(p);
+    case 'getQuestionPoolText': return getQuestionPoolText_();
     case 'listQuizNos': return listQuizNos_();
     case 'seedSampleData': return seedSampleData_();
 

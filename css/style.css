@@ -260,7 +260,10 @@ label.field-label {
   text-align: center;
   margin: 10px 0 26px;
   line-height: 1.4;
+  transition: color .2s ease;
 }
+.question-text.is-wrong { color: var(--danger); }
+.question-text.is-correct { color: var(--success); }
 
 .choices {
   display: grid;
@@ -438,3 +441,28 @@ canvas#confetti-canvas {
 a.link { color: var(--accent); }
 .qr-box { display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:10px; }
 .qr-box canvas, .qr-box img { background:#fff; padding:10px; border-radius:12px; }
+
+.qbank-entry {
+  position: relative;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 20px 6px;
+  margin-bottom: 18px;
+  animation: cardIn .35s cubic-bezier(.16,1,.3,1);
+}
+.qbank-entry label.field-label input[type=radio] { margin-right: 4px; vertical-align: middle; }
+.qbank-remove {
+  position: absolute;
+  top: 12px; right: 12px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: background .15s ease, color .15s ease;
+}
+.qbank-remove:hover { background: var(--danger-soft); color: var(--danger); }
