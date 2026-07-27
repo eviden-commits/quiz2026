@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
 <title>관리자 설정 - 현장 퀴즈 챔피언</title>
-<link rel="stylesheet" href="css/style.css?v=13" />
+<link rel="stylesheet" href="css/style.css?v=14" />
 </head>
 <body>
 <div class="wrap">
@@ -46,7 +46,7 @@
     </div>
     <label class="field-label">상품명 (쉼표로 구분)</label>
     <input type="text" id="setPrizeNames" placeholder="예: 1등 무선이어폰, 2등 텀블러" />
-    <button class="btn ghost" id="saveSettingsBtn">설정 저장</button>
+    <button class="btn ghost" id="saveSettingsBtn">① 설정 저장</button>
     <p class="muted" id="settingsHint">회차 생성 시 자동으로 적용됩니다. 회차 생성 후에는 이 버튼으로 바로 수정할 수 있습니다.</p>
 
     <div class="section-title">2. 문항 추가</div>
@@ -61,12 +61,12 @@
         <select id="genCategory"><option value="">전체</option></select>
       </div>
     </div>
-    <button class="btn secondary" id="genBtn">➕ 문항 추가 (새 회차 시작)</button>
+    <button class="btn secondary" id="genBtn">② 문항 추가 (새 회차 시작)</button>
 
     <div class="section-title">3. 참석자 오픈</div>
     <div id="codeAlert" class="alert hidden"></div>
     <p class="muted">버튼을 누르면 접속코드(4자리)가 자동 생성됩니다. 이 코드를 근로자에게 안내하세요.</p>
-    <button class="btn" id="openBtn">📥 참석자 오픈</button>
+    <button class="btn" id="openBtn">③ 참석자 오픈</button>
     <div class="alert success hidden" id="accessCodeBox" style="font-size:28px; font-weight:900; letter-spacing:4px;"></div>
     <div class="qr-box hidden" id="qrBox">
       <img id="qrImg" alt="QR" />
@@ -75,7 +75,7 @@
 
     <div class="section-title">4. 참석자 클로즈</div>
     <div id="closeAlert" class="alert hidden"></div>
-    <button class="btn danger" id="closeBtn">🔒 참석자 클로즈 (마감 후 재사용 불가)</button>
+    <button class="btn danger" id="closeBtn">④ 참석자 클로즈 (마감 후 재사용 불가)</button>
     <p class="muted" id="sessionStatus" style="text-align:center; margin-top:10px;"></p>
 
     </div>
@@ -91,10 +91,10 @@
   </div>
 </div>
 
-<script src="js/config.js?v=13"></script>
-<script src="js/api.js?v=13"></script>
-<script src="js/matrixRain.js?v=13"></script>
-<script src="js/auth.js?v=13"></script>
-<script src="js/admin.js?v=13"></script>
+<script src="js/config.js?v=14"></script>
+<script src="js/api.js?v=14"></script>
+<script src="js/matrixRain.js?v=14"></script>
+<script src="js/auth.js?v=14"></script>
+<script src="js/admin.js?v=14"></script>
 </body>
 </html>
