@@ -73,6 +73,8 @@ function route_(action, p) {
     case 'closeParticipantSession': return closeSession_(p.quizNo, 'participant');
     case 'getParticipantSession': return getSession_(p.quizNo, 'participant');
     case 'getLeaderboard': return getLeaderboard_(p.quizNo);
+    case 'getTieGroupsForPrizes': return getTieGroupsForPrizes_(p.quizNo);
+    case 'finalizeRanks': return finalizeRanks_(p);
 
     default: throw new Error('알 수 없는 action: ' + action);
   }

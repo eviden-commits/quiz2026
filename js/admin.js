@@ -86,16 +86,71 @@
     document.getElementById('qrBox').classList.remove('hidden');
   }
 
-  // 3. 참석자 클로즈
+  // 4. 참석자 클로즈 (상품 구간 동률이 있으면 운명의 수레바퀴로 추첨)
   document.getElementById('closeBtn').addEventListener('click', function () {
     if (!currentQuizNo) { flash('closeAlert', '진행 중인 회차가 없습니다.', 'error'); return; }
-    QuizApi.call('closeParticipantSession', { quizNo: currentQuizNo })
+    var quizNo = currentQuizNo;
+
+    QuizApi.call('closeParticipantSession', { quizNo: quizNo })
       .then(function () {
         flash('closeAlert', '참석자가 마감되었습니다. 이 회차는 재사용할 수 없습니다.', 'success');
         refreshStatus();
+        return QuizApi.call('getTieGroupsForPrizes', { quizNo: quizNo });
+      })
+      .then(function (result) {
+        if (!result.tieGroups.length) return;
+        return resolveTieGroupsSequentially(result.orderedCodes, result.tieGroups)
+          .then(function (finalOrder) {
+            return QuizApi.call('finalizeRanks', { quizNo: quizNo, orderedCodes: finalOrder });
+          })
+          .then(function (lb) {
+            showFinalResultPopup(lb);
+          });
       })
       .catch(function (err) { flash('closeAlert', err.message, 'error'); });
   });
+
+  // tieGroups: [{startRank, members:[{code,name,...}]}] (score순 orderedCodes 안에서 해당 구간만 교체)
+  function resolveTieGroupsSequentially(orderedCodes, tieGroups) {
+    var finalOrder = orderedCodes.slice();
+    var codeToName = {};
+
+    function next(i) {
+      if (i >= tieGroups.length) return Promise.resolve(finalOrder);
+      var group = tieGroups[i];
+      group.members.forEach(function (m) { codeToName[m.code] = m.name; });
+      var names = group.members.map(function (m) { return m.name; });
+
+      return window.runTieBreakWheel(names, group.startRank).then(function (resolvedNames) {
+        var nameToCode = {};
+        group.members.forEach(function (m) { nameToCode[m.name] = m.code; });
+        var startIdx = group.startRank - 1;
+        resolvedNames.forEach(function (name, idx) {
+          finalOrder[startIdx + idx] = nameToCode[name];
+        });
+        return next(i + 1);
+      });
+    }
+    return next(0);
+  }
+
+  function showFinalResultPopup(lb) {
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,5,10,0.88);display:flex;align-items:center;justify-content:center;z-index:2500;';
+    var rows = lb.ranking.slice(0, 10).map(function (r) {
+      return '<tr><td>' + r.rank + '</td><td>' + r.name + '</td><td>' + r.correctCount + '</td><td>' + r.score + '</td></tr>';
+    }).join('');
+    overlay.innerHTML =
+      '<div class="card" style="max-width:480px;">' +
+      '<h1 class="title" style="font-size:22px;">🏁 최종 순위 확정</h1>' +
+      '<table class="leaderboard"><tr><th>순위</th><th>이름</th><th>정답수</th><th>점수</th></tr>' + rows + '</table>' +
+      '<button class="btn" id="finalResultCloseBtn" style="margin-top:16px;">확인</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    overlay.querySelector('#finalResultCloseBtn').addEventListener('click', function () {
+      document.body.removeChild(overlay);
+    });
+  }
 
   function refreshStatus() {
     if (!currentQuizNo) return;

@@ -116,6 +116,63 @@ function recomputeRanks_(quizNo) {
   });
 }
 
+/**
+ * 참석자 클로즈 시 상품 구간에 동률이 있는지 확인한다.
+ * 점수만으로 그룹핑하고, winnerCount 이내 순위에 걸치는 2명 이상 그룹만 돌려준다.
+ */
+function getTieGroupsForPrizes_(quizNo) {
+  var settings = null;
+  try { settings = getSettings_(quizNo); } catch (e) { /* 사전설정 없으면 동률처리 불필요 */ }
+  var winnerCount = settings ? Number(settings.winnerCount) || 0 : 0;
+
+  var rows = sheetToObjects_(getSheet_('participants')).filter(function (r) {
+    return String(r.quizNo) === String(quizNo) && r.status === 'finished';
+  });
+  rows.sort(function (a, b) { return Number(b.score) - Number(a.score); });
+
+  var groups = [];
+  rows.forEach(function (r) {
+    var last = groups[groups.length - 1];
+    if (last && Number(last.score) === Number(r.score)) {
+      last.members.push({ code: r.code, name: r.name, correctCount: r.correctCount, score: r.score });
+    } else {
+      groups.push({ score: r.score, members: [{ code: r.code, name: r.name, correctCount: r.correctCount, score: r.score }] });
+    }
+  });
+
+  var tieGroups = [];
+  var runningCount = 0;
+  groups.forEach(function (g) {
+    var start = runningCount + 1;
+    runningCount += g.members.length;
+    if (g.members.length > 1 && winnerCount > 0 && start <= winnerCount) {
+      tieGroups.push({ startRank: start, members: g.members });
+    }
+  });
+
+  return { winnerCount: winnerCount, orderedCodes: rows.map(function (r) { return r.code; }), tieGroups: tieGroups };
+}
+
+/**
+ * 동률 추첨(운명의 수레바퀴) 등으로 확정된 최종 순서를 받아 rank를 일괄 반영한다.
+ */
+function finalizeRanks_(p) {
+  var quizNo = p.quizNo;
+  var orderedCodes = p.orderedCodes || [];
+  var rows = sheetToObjects_(getSheet_('participants')).filter(function (r) {
+    return String(r.quizNo) === String(quizNo) && r.status === 'finished';
+  });
+  var byCode = {};
+  rows.forEach(function (r) { byCode[String(r.code)] = r; });
+
+  orderedCodes.forEach(function (code, idx) {
+    var r = byCode[String(code)];
+    if (r) updateRow_('participants', r._row, { rank: idx + 1 });
+  });
+
+  return getLeaderboard_(quizNo);
+}
+
 function getLeaderboard_(quizNo) {
   var rows = sheetToObjects_(getSheet_('participants')).filter(function (r) {
     return String(r.quizNo) === String(quizNo) && r.status === 'finished';
