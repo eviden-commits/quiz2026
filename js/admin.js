@@ -118,7 +118,8 @@
         }).join('');
     }).catch(function () {});
   }
-  setInterval(refreshFinished, 5000);
+  document.getElementById('refreshFinishedBtn').addEventListener('click', refreshFinished);
+  setInterval(refreshFinished, 10000);
 
   requireAppLogin('quiz2026_admin_auth');
 })();
