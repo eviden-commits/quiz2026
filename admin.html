@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
 <title>관리자 설정 - 현장 퀴즈 챔피언</title>
-<link rel="stylesheet" href="css/style.css?v=3" />
+<link rel="stylesheet" href="css/style.css?v=4" />
 </head>
 <body>
 <div class="wrap">
@@ -28,20 +28,11 @@
     </div>
     <button class="btn secondary" id="genBtn">➕ 문항 추가 (새 회차 시작)</button>
 
-    <div class="section-title">2. 참석자 오픈 (참여코드 생성)</div>
+    <div class="section-title">2. 참석자 오픈</div>
     <div id="codeAlert" class="alert hidden"></div>
-    <div class="grid2">
-      <div>
-        <label class="field-label">발급 인원 수</label>
-        <input type="text" id="codeCount" placeholder="예: 30" value="30" />
-      </div>
-      <div>
-        <label class="field-label">코드 자릿수</label>
-        <input type="text" id="codeDigits" value="4" />
-      </div>
-    </div>
+    <p class="muted">버튼을 누르면 접속코드(4자리)가 자동 생성됩니다. 이 코드를 근로자에게 안내하세요.</p>
     <button class="btn" id="openBtn">📥 참석자 오픈</button>
-    <textarea id="codesOutput" rows="4" readonly placeholder="생성된 참여코드가 여기에 표시됩니다" style="margin-top:10px;"></textarea>
+    <div class="alert success hidden" id="accessCodeBox" style="font-size:28px; font-weight:900; letter-spacing:4px;"></div>
     <div class="qr-box hidden" id="qrBox">
       <img id="qrImg" alt="QR" />
       <a class="link" id="qrLink" target="_blank"></a>
@@ -72,9 +63,9 @@
   </div>
 </div>
 
-<script src="js/config.js?v=3"></script>
-<script src="js/api.js?v=3"></script>
-<script src="js/auth.js?v=3"></script>
-<script src="js/admin.js?v=3"></script>
+<script src="js/config.js?v=4"></script>
+<script src="js/api.js?v=4"></script>
+<script src="js/auth.js?v=4"></script>
+<script src="js/admin.js?v=4"></script>
 </body>
 </html>

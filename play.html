@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
 <title>참여형 퀴즈 - 현장 퀴즈 챔피언</title>
-<link rel="stylesheet" href="css/style.css?v=3" />
+<link rel="stylesheet" href="css/style.css?v=4" />
 </head>
 <body>
 <div class="wrap">
@@ -12,12 +12,12 @@
   <!-- 1. 참여 코드 입력 -->
   <div class="card" id="screen-join">
     <h1 class="title">📱 퀴즈 참여</h1>
-    <p class="subtitle">퀴즈 번호와 참여코드를 입력하세요</p>
+    <p class="subtitle">진행자가 알려준 접속코드를 입력하세요</p>
     <div id="join-alert" class="alert error hidden"></div>
     <label class="field-label">퀴즈 번호</label>
     <input type="text" id="quizNoInput" inputmode="numeric" placeholder="예: 1" />
-    <label class="field-label">참여코드 (진행자에게 받은 번호)</label>
-    <input type="text" id="codeInput" inputmode="numeric" placeholder="예: 1234" />
+    <label class="field-label">접속코드 (진행자가 부여한 4자리 번호)</label>
+    <input type="text" id="codeInput" inputmode="numeric" placeholder="예: 1234" maxlength="4" />
     <button class="btn" id="joinBtn">참여하기</button>
   </div>
 
@@ -57,9 +57,9 @@
 
 </div>
 
-<script src="js/config.js?v=3"></script>
-<script src="js/api.js?v=3"></script>
-<script src="js/confetti.js?v=3"></script>
-<script src="js/play.js?v=3"></script>
+<script src="js/config.js?v=4"></script>
+<script src="js/api.js?v=4"></script>
+<script src="js/confetti.js?v=4"></script>
+<script src="js/play.js?v=4"></script>
 </body>
 </html>

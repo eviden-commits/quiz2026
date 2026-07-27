@@ -2,61 +2,48 @@
  * 참여형(Player) 참여코드 접수 / 응답 제출 / 최종 제출 / 순위
  */
 
+function generateRandomCode_(digits) {
+  var min = Math.pow(10, digits - 1);
+  var max = Math.pow(10, digits) - 1;
+  return String(Math.floor(min + Math.random() * (max - min + 1)));
+}
+
 function openParticipantSession_(quizNo) {
   getQuizRows_(quizNo);
   var existing = getSession_(quizNo, 'participant');
   if (existing.status === 'closed') throw new Error('이미 마감된 회차입니다. 새 회차를 생성하세요. (재사용 불가)');
-  return upsertSession_(quizNo, 'participant', { status: 'open', currentIndex: 0 });
+  var accessCode = generateRandomCode_(4);
+  return upsertSession_(quizNo, 'participant', { status: 'open', currentIndex: 0, accessCode: accessCode });
 }
 
-function claimCode_(quizNo, code) {
-  code = String(code).trim();
-  if (!code) throw new Error('참여코드를 입력하세요.');
+/**
+ * 참석자는 진행자가 공지한 4자리 접속코드를 입력해 참여한다.
+ * 접속코드는 회차 전체가 공유하며, 개인 식별용 내부 코드는 서버가 자동 발급한다.
+ */
+function joinWithAccessCode_(quizNo, accessCode) {
+  accessCode = String(accessCode).trim();
+  if (!accessCode) throw new Error('접속코드를 입력하세요.');
   var session = getSession_(quizNo, 'participant');
   if (session.status === 'closed') throw new Error('참여가 마감되었습니다.');
+  if (session.status !== 'open') throw new Error('아직 참여가 시작되지 않았습니다.');
+  if (String(session.accessCode).trim() !== accessCode) throw new Error('접속코드가 올바르지 않습니다. 진행자에게 확인하세요.');
 
-  var sheet = getSheet_('participants');
-  var rows = sheetToObjects_(sheet);
-  var row = rows.filter(function (r) { return String(r.quizNo) === String(quizNo) && String(r.code) === code; })[0];
-
-  if (!row) throw new Error('유효하지 않은 참여코드입니다. 진행자에게 확인하세요.');
-  if (row.status !== 'unassigned') throw new Error('이미 사용 중인 참여코드입니다. 다른 번호를 입력하세요.');
-
-  updateRow_('participants', row._row, { startTime: new Date(), status: 'playing' });
-  return { quizNo: quizNo, code: code };
-}
-
-function generateParticipantCodes_(p) {
-  var quizNo = p.quizNo;
-  var count = Number(p.count) || 10;
-  var digits = Number(p.digits) || 4;
-  var min = Math.pow(10, digits - 1);
-  var max = Math.pow(10, digits) - 1;
-
-  var sheet = getSheet_('participants');
-  var existing = sheetToObjects_(sheet).filter(function (r) { return String(r.quizNo) === String(quizNo); });
+  var existingRows = sheetToObjects_(getSheet_('participants')).filter(function (r) { return String(r.quizNo) === String(quizNo); });
   var used = {};
-  existing.forEach(function (r) { used[String(r.code)] = true; });
+  existingRows.forEach(function (r) { used[String(r.code)] = true; });
 
-  var codes = [];
+  var code;
   var attempts = 0;
-  while (codes.length < count && attempts < count * 50) {
+  do {
+    code = generateRandomCode_(4);
     attempts++;
-    var candidate = String(Math.floor(min + Math.random() * (max - min + 1)));
-    if (used[candidate]) continue;
-    used[candidate] = true;
-    codes.push(candidate);
-  }
-  if (codes.length < count) throw new Error('생성 가능한 코드 조합이 부족합니다. 자릿수를 늘려주세요.');
+  } while (used[code] && attempts < 200);
 
-  codes.forEach(function (code) {
-    appendObject_('participants', {
-      quizNo: quizNo, code: code, name: '', correctCount: 0, score: 0,
-      startTime: '', endTime: '', rank: '', status: 'unassigned'
-    });
+  appendObject_('participants', {
+    quizNo: quizNo, code: code, name: '', correctCount: 0, score: 0,
+    startTime: new Date(), endTime: '', rank: '', status: 'playing'
   });
-
-  return { quizNo: quizNo, codes: codes };
+  return { quizNo: quizNo, code: code };
 }
 
 function getParticipantRow_(quizNo, code) {

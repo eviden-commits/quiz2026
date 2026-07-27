@@ -10,7 +10,7 @@ var SHEETS = {
   settings: ['quizNo', 'title', 'quizCount', 'prizeCount', 'winnerCount', 'prizeNames', 'timeLimitSec', 'createdAt'],
   participants: ['quizNo', 'code', 'name', 'correctCount', 'score', 'startTime', 'endTime', 'rank', 'status'],
   answers: ['quizNo', 'code', 'order', 'selected', 'correct', 'answeredAt'],
-  sessions: ['quizNo', 'mode', 'status', 'currentIndex', 'updatedAt'],
+  sessions: ['quizNo', 'mode', 'status', 'currentIndex', 'accessCode', 'updatedAt'],
   winners: ['quizNo', 'questionOrder', 'name', 'recordedAt']
 };
 

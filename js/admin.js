@@ -39,25 +39,22 @@
         updateRoundBadge();
         flash('genAlert', res.count + '개 문항으로 새 회차가 생성되었습니다.', 'success');
         document.getElementById('sessionStatus').textContent = '';
-        document.getElementById('codesOutput').value = '';
+        document.getElementById('accessCodeBox').classList.add('hidden');
         document.getElementById('qrBox').classList.add('hidden');
       })
       .catch(function (err) { flash('genAlert', err.message, 'error'); });
   });
 
-  // 2. 참석자 오픈 (세션 오픈 + 참여코드 생성 + QR)
+  // 2. 참석자 오픈 (세션 오픈 + 접속코드 자동 생성 + QR)
   document.getElementById('openBtn').addEventListener('click', function () {
     if (!currentQuizNo) { flash('codeAlert', '먼저 문항을 추가해 회차를 생성하세요.', 'error'); return; }
-    var count = document.getElementById('codeCount').value.trim();
-    var digits = document.getElementById('codeDigits').value.trim();
 
     QuizApi.call('openParticipantSession', { quizNo: currentQuizNo })
-      .then(function () {
-        return QuizApi.call('generateParticipantCodes', { quizNo: currentQuizNo, count: count, digits: digits });
-      })
-      .then(function (res) {
-        flash('codeAlert', res.codes.length + '명 참석자 오픈 완료.', 'success');
-        document.getElementById('codesOutput').value = res.codes.join(', ');
+      .then(function (session) {
+        flash('codeAlert', '참석자 오픈 완료.', 'success');
+        var box = document.getElementById('accessCodeBox');
+        box.textContent = '접속코드: ' + session.accessCode;
+        box.classList.remove('hidden');
         showQr(currentQuizNo);
         refreshStatus();
       })

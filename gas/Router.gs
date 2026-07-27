@@ -63,8 +63,7 @@ function route_(action, p) {
     case 'closeHostSession': return closeSession_(p.quizNo, 'host');
 
     // ---- participant mode ----
-    case 'claimCode': return claimCode_(p.quizNo, p.code);
-    case 'generateParticipantCodes': return generateParticipantCodes_(p);
+    case 'joinWithAccessCode': return joinWithAccessCode_(p.quizNo, p.accessCode);
     case 'submitAnswer': return submitAnswer_(p);
     case 'finalizeParticipant': return finalizeParticipant_(p);
     case 'openParticipantSession': return openParticipantSession_(p.quizNo);

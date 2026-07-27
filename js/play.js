@@ -35,14 +35,14 @@
 
   document.getElementById('joinBtn').addEventListener('click', function () {
     var quizNo = document.getElementById('quizNoInput').value.trim();
-    var code = document.getElementById('codeInput').value.trim();
+    var accessCode = document.getElementById('codeInput').value.trim();
     document.getElementById('join-alert').classList.add('hidden');
-    if (!quizNo || !code) { showJoinError('퀴즈 번호와 참여코드를 모두 입력하세요.'); return; }
+    if (!quizNo || !accessCode) { showJoinError('퀴즈 번호와 접속코드를 모두 입력하세요.'); return; }
 
-    QuizApi.call('claimCode', { quizNo: quizNo, code: code })
-      .then(function () {
+    QuizApi.call('joinWithAccessCode', { quizNo: quizNo, accessCode: accessCode })
+      .then(function (res) {
         state.quizNo = quizNo;
-        state.code = code;
+        state.code = res.code;
         return QuizApi.call('getQuizForPlayer', { quizNo: quizNo });
       })
       .then(function (questions) {
